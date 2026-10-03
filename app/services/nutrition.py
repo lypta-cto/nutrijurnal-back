@@ -260,6 +260,8 @@ FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 SPLIT = re.compile(r"[\n;+]|(?<!\d),|,(?!\d)|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
 # A number followed by "%" is part of the name ("3,5% mleko"), not an amount
 NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)(?![\d.,]*\s*%)\s*(?:/\s*(\d+))?")
+# "1.000 g": a point or a comma with three digits after it, as a thousand
+THOUSANDS = re.compile(r"^[1-9]\d{0,2}[.,]\d{3}$")
 # An amount after the food, the way a label or a plan lists it: "piletina
 # 200 g", "chicken 250g". Only with its unit — a bare number at the end is as
 # often part of the name ("Mleko 1.6") as an amount
@@ -415,6 +417,8 @@ def read_amount(text: str) -> Amount:
             return Amount(share, "tbsp", rest, vague=True)
 
     quantity: float | None = None
+    # The digits as typed, for telling "1.000 g" from "1.5 kg" once the unit is known
+    digits: str | None = None
     for symbol, value in FRACTIONS.items():
         if rest.startswith(symbol):
             quantity, rest = value, rest[len(symbol) :].strip()
@@ -422,7 +426,7 @@ def read_amount(text: str) -> Amount:
     if quantity is None:
         match = NUMBER.match(rest)
         if match:
-            quantity = _number(match.group(1), match.group(2))
+            quantity, digits = _number(match.group(1), match.group(2)), match.group(1)
             rest = rest[match.end() :].strip()
     if quantity is None and rest:
         quantity, rest = _said_amount(rest)
@@ -449,9 +453,13 @@ def read_amount(text: str) -> Amount:
     if quantity is None and not unit:
         trailing = TRAILING.search(rest)
         if trailing and trailing.group(3) in UNIT_WORDS:
-            quantity = _number(trailing.group(1), trailing.group(2))
+            quantity, digits = _number(trailing.group(1), trailing.group(2)), trailing.group(1)
             unit = UNIT_WORDS[trailing.group(3)]
             rest = rest[: trailing.start()].strip()
+    if digits and THOUSANDS.match(digits) and unit not in SCALED_UNITS:
+        # Three digits after the point are a thousands separator — nobody
+        # weighs to a thousandth of a gram — but "1.500 kg" is a kilo and a half
+        quantity = float(re.sub(r"[.,]", "", digits))
     if quantity is None:
         quantity = 1.0
     if not unit:

@@ -59,6 +59,14 @@ def test_a_foods_search_key_holds_each_name_once():
         # Past a dozen, a bare number is a weight, not a count
         ("150 piletine", 150, "g", "piletine"),
         ("50g od ovsenih", 50, "g", "ovsenih"),
+        # A point or a comma before three digits is a thousands separator…
+        ("1.000 g piletine", 1000, "g", "piletine"),
+        ("1,500 ml vode", 1500, "ml", "vode"),
+        ("2.000 vode", 2000, "g", "vode"),
+        # …except in kilos and litres, and before fewer digits
+        ("1.500 kg piletine", 1.5, "kg", "piletine"),
+        ("0,250 l mleka", 0.25, "l", "mleka"),
+        ("1.25 g soli", 1.25, "g", "soli"),
         # A share of fat is part of the name, not a count
         ("3,5% mleko", 1, "piece", "3,5% mleko"),
         ("2 dl 3.2% jogurta", 2, "dl", "3.2% jogurta"),
@@ -417,6 +425,7 @@ async def test_litres_and_kilos_with_any_case_ending(client: AsyncClient, me, te
         ("chicken 250g", [("Pileći file", "g", 250)]),
         ("ovsene pahuljice 50g", [("Ovsene pahuljice", "g", 50)]),
         ("mleko 0,5 l", [("Mleko 2.8%", "ml", 500)]),
+        ("voda 1.000 ml", [("Voda", "ml", 1000)]),
         ("whey 2 merice", [("Whey protein", "scoop", 60)]),
         # A number inside the name stays there; the one at the end is the amount
         ("3,5% mleko 200 ml", [("Mleko 2.8%", "ml", 200)]),
