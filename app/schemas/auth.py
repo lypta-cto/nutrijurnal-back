@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import UTC, date, datetime
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
@@ -54,6 +54,17 @@ class DemoRequest(BaseModel):
     in rather than the server's."""
 
     today: date | None = None
+
+    @field_validator("today")
+    @classmethod
+    def _a_today_somewhere_on_earth(cls, value: date | None) -> date | None:
+        """Every timezone's today is within a day of UTC's. A clock further off
+        than that is wrong, not elsewhere — the server's today stands in, so
+        the demo's birth year and weighings are never built from 2090."""
+        if value is None:
+            return None
+        utc_today = datetime.now(UTC).date()
+        return value if abs((value - utc_today).days) <= 1 else None
 
 
 class DemoClaim(BaseModel):

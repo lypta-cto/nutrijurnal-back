@@ -1,7 +1,7 @@
 """Try the demo: one tap into a diary with two weeks already in it, kept
 apart from everyone else's, deleted when it expires — unless it is kept."""
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
@@ -14,7 +14,9 @@ from app.models import Meal, User
 from app.services import eating_seed, reminders
 from tests.helpers import PREFIX, auth_headers
 
-TODAY = date(2026, 9, 21)
+# The viewer's today must be within a day of UTC's to be taken (a clock
+# further off is ignored), so the demo is asked for on the real one
+TODAY = datetime.now(UTC).date()
 
 
 @pytest.fixture(autouse=True)

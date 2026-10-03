@@ -157,19 +157,27 @@ async def test_a_demo_without_a_today_ends_on_the_servers(client: AsyncClient):
     assert day["meals"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="create_demo() derives the demo's birth year from the client's `today`; a "
-    "today decades off fails GoalProfile validation inside the request (a 500 on a "
-    "public, unauthenticated endpoint) instead of being refused or clamped",
-)
 @pytest.mark.parametrize("today", [date(2090, 1, 1), date(1910, 1, 1)])
-async def test_a_demo_asked_for_with_a_clock_far_off_is_refused_or_clamped(
+async def test_a_demo_asked_for_with_a_clock_far_off_ends_on_the_servers_today(
     client: AsyncClient, today
 ):
     response = await client.post(f"{PREFIX}/auth/demo", json={"today": today.isoformat()})
 
-    assert response.status_code in (201, 422)
+    assert response.status_code == 201
+    headers = bearer(response.json()["access_token"])
+    day = (await client.get(f"{PREFIX}/eating/days/{date.today()}", headers=headers)).json()
+    assert day["meals"]
+
+
+async def test_a_demo_asked_for_a_day_ahead_keeps_the_viewers_today(client: AsyncClient):
+    """East of UTC it is already tomorrow — that is the viewer's today, not a bad clock."""
+    tomorrow = datetime.now(UTC).date() + timedelta(days=1)
+
+    response = await client.post(f"{PREFIX}/auth/demo", json={"today": tomorrow.isoformat()})
+
+    headers = bearer(response.json()["access_token"])
+    day = (await client.get(f"{PREFIX}/eating/days/{tomorrow}", headers=headers)).json()
+    assert day["meals"]
 
 
 # --- Files left on disk ---------------------------------------------------------------------
