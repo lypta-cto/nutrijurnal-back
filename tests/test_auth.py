@@ -1,11 +1,17 @@
+import io
 import uuid
+from datetime import UTC, datetime, timedelta
 
+import jwt
+import pytest
 from httpx import AsyncClient
-from sqlalchemy import func, select
+from PIL import Image
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.models import Food, Meal, Recipe
+from app.core.security import create_access_token
+from app.models import Food, Meal, Recipe, RefreshToken, Role, User
 
 PREFIX = settings.API_V1_PREFIX
 REGISTER = {"email": "user@example.com", "password": "supersecret1", "full_name": "Test User"}
@@ -242,3 +248,422 @@ async def test_deleting_the_account_takes_everything_with_it(
     assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
     again = await client.post(f"{PREFIX}/auth/register", json=REGISTER)
     assert again.status_code == 201
+
+
+# --- Registration, more closely -----------------------------------------------
+
+
+async def test_register_validates_every_field(client: AsyncClient):
+    cases = {
+        "not an email": {**REGISTER, "email": "not-an-email"},
+        "seven characters": {**REGISTER, "password": "1234567"},
+        "over 128 characters": {**REGISTER, "password": "x" * 129},
+        "a name over 255": {**REGISTER, "full_name": "A" * 256},
+        "no password": {"email": "a@example.com", "full_name": "A"},
+        "no email": {"password": "supersecret1", "full_name": "A"},
+    }
+    for case, body in cases.items():
+        response = await client.post(f"{PREFIX}/auth/register", json=body)
+        assert response.status_code == 422, case
+
+    # Eight characters is the floor, not one short of it
+    assert (
+        await client.post(f"{PREFIX}/auth/register", json={**REGISTER, "password": "12345678"})
+    ).status_code == 201
+
+
+async def test_sign_up_can_not_choose_its_own_role(client: AsyncClient):
+    """The body is the public's to write — a role or a verified flag smuggled
+    into it must never stick."""
+    response = await client.post(
+        f"{PREFIX}/auth/register",
+        json={**REGISTER, "role": "owner", "is_verified": True, "is_active": False},
+    )
+
+    assert response.status_code == 201
+    user = response.json()["user"]
+    assert user["role"] == "member"
+    assert user["is_verified"] is False and user["is_active"] is True
+    assert user["has_password"] is True
+    # The hash never leaves the server
+    assert "hashed_password" not in user and "password" not in user
+
+
+async def test_the_refresh_cookie_is_http_only_and_scoped_to_auth(client: AsyncClient):
+    response = await client.post(f"{PREFIX}/auth/register", json=REGISTER)
+
+    cookie = response.headers["set-cookie"].lower()
+    assert cookie.startswith(f"{settings.REFRESH_COOKIE_NAME}=")
+    assert "httponly" in cookie
+    assert f"path={PREFIX}/auth".lower() in cookie
+    assert "samesite=lax" in cookie
+    assert f"max-age={30 * 24 * 60 * 60}" in cookie
+
+
+async def test_login_ignores_the_case_of_the_email(client: AsyncClient):
+    await register(client)
+
+    response = await client.post(
+        f"{PREFIX}/auth/login", json={"email": "USER@Example.COM", "password": "supersecret1"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["user"]["email"] == REGISTER["email"]
+
+
+async def test_a_deactivated_account_can_not_sign_in_or_carry_on(
+    client: AsyncClient, session: AsyncSession
+):
+    body = await register(client)
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
+    user = await session.get(User, uuid.UUID(body["user"]["id"]))
+    user.is_active = False
+    await session.commit()
+
+    login = await client.post(
+        f"{PREFIX}/auth/login",
+        json={"email": REGISTER["email"], "password": REGISTER["password"]},
+    )
+    # The same words as a wrong password: a closed account is not advertised
+    assert login.status_code == 401
+    assert login.json()["detail"] == "Incorrect email or password"
+    assert (await client.get(f"{PREFIX}/auth/me", headers=headers)).status_code == 401
+    assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
+
+
+# --- Access tokens ------------------------------------------------------------
+
+
+async def test_only_a_live_token_signed_by_this_server_is_accepted(client: AsyncClient):
+    body = await register(client)
+    subject, role = body["user"]["id"], body["user"]["role"]
+    now = datetime.now(UTC)
+    claims = {"sub": subject, "role": role, "type": "access", "iat": now}
+
+    forged = {
+        "expired": create_access_token(subject, role, expires_delta=timedelta(seconds=-1)),
+        "signed elsewhere": jwt.encode(
+            {**claims, "exp": now + timedelta(minutes=5)},
+            "another-secret-key-that-is-long-enough-too",
+            algorithm="HS256",
+        ),
+        "unsigned": jwt.encode({**claims, "exp": now + timedelta(minutes=5)}, None, "none"),
+        "not an access token": jwt.encode(
+            {**claims, "type": "refresh", "exp": now + timedelta(minutes=5)},
+            settings.SECRET_KEY,
+            algorithm="HS256",
+        ),
+        "nobody": create_access_token(str(uuid.uuid4()), role),
+        "garbage": "not.a.token",
+    }
+    for case, token in forged.items():
+        response = await client.get(
+            f"{PREFIX}/auth/me", headers={"Authorization": f"Bearer {token}"}
+        )
+        assert response.status_code == 401, case
+
+    # A token without the Bearer scheme is no token at all
+    raw = await client.get(f"{PREFIX}/auth/me", headers={"Authorization": body["access_token"]})
+    assert raw.status_code == 401
+
+
+async def test_editing_ones_profile_can_not_raise_ones_role(client: AsyncClient):
+    body = await register(client)
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
+
+    response = await client.patch(
+        f"{PREFIX}/auth/me",
+        json={"full_name": "Ana Anić", "role": "owner", "is_active": False, "email": "x@y.com"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    me = response.json()
+    assert me["full_name"] == "Ana Anić"
+    assert (me["role"], me["is_active"], me["email"]) == ("member", True, REGISTER["email"])
+    # And it was saved, not just echoed
+    again = (await client.get(f"{PREFIX}/auth/me", headers=headers)).json()
+    assert again["full_name"] == "Ana Anić" and again["role"] == "member"
+
+
+# --- Refresh tokens and sessions ----------------------------------------------
+
+
+async def test_rotation_keeps_going_one_cookie_at_a_time(client: AsyncClient):
+    await register(client)
+    seen = {client.cookies[settings.REFRESH_COOKIE_NAME]}
+
+    for _ in range(3):
+        response = await client.post(f"{PREFIX}/auth/refresh")
+        assert response.status_code == 200
+        assert response.json()["user"]["email"] == REGISTER["email"]
+        seen.add(client.cookies[settings.REFRESH_COOKIE_NAME])
+
+    # Every use handed out a new one
+    assert len(seen) == 4
+
+
+async def _expire_every_refresh_token(session: AsyncSession) -> None:
+    await session.execute(
+        update(RefreshToken).values(expires_at=datetime.now(UTC) - timedelta(minutes=1))
+    )
+    await session.commit()
+
+
+async def test_an_expired_or_unknown_refresh_token_is_refused(
+    client: AsyncClient, session: AsyncSession
+):
+    await register(client)
+    await _expire_every_refresh_token(session)
+
+    assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
+
+    client.cookies.set(settings.REFRESH_COOKIE_NAME, "made-up", path=f"{PREFIX}/auth")
+    assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "BUG app/api/routes/auth.py refresh(): clear_refresh_cookie() is called on the "
+        "injected Response and then HTTPException is raised; FastAPI answers the exception "
+        "with a fresh response, so the Set-Cookie that clears the dead token is dropped and "
+        "the browser keeps sending it until it expires"
+    ),
+)
+async def test_a_refused_refresh_token_is_cleared_from_the_browser(
+    client: AsyncClient, session: AsyncSession
+):
+    await register(client)
+    await _expire_every_refresh_token(session)
+
+    refused = await client.post(f"{PREFIX}/auth/refresh")
+
+    assert refused.status_code == 401
+    assert f'{settings.REFRESH_COOKIE_NAME}=""' in refused.headers.get("set-cookie", "")
+
+
+async def test_logout_without_a_cookie_still_signs_out(client: AsyncClient):
+    response = await client.post(f"{PREFIX}/auth/logout")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "Signed out"}
+
+
+async def test_sessions_are_listed_and_can_all_be_ended(client: AsyncClient):
+    body = await register(client)
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
+    for agent in ("Phone", "Laptop"):
+        await client.post(
+            f"{PREFIX}/auth/login",
+            json={"email": REGISTER["email"], "password": REGISTER["password"]},
+            headers={"User-Agent": agent},
+        )
+
+    listed = await client.get(f"{PREFIX}/auth/sessions", headers=headers)
+    assert listed.status_code == 200
+    agents = {row["user_agent"] for row in listed.json()}
+    assert {"Phone", "Laptop"} <= agents and len(listed.json()) == 3
+
+    ended = await client.delete(f"{PREFIX}/auth/sessions", headers=headers)
+    assert ended.json()["message"] == "Revoked 3 session(s)"
+    assert (await client.get(f"{PREFIX}/auth/sessions", headers=headers)).json() == []
+    assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
+
+
+async def test_sessions_are_each_persons_own(client: AsyncClient):
+    mine = await register(client)
+    theirs = await register(client, email="other@example.com")
+
+    listed = await client.get(
+        f"{PREFIX}/auth/sessions", headers={"Authorization": f"Bearer {theirs['access_token']}"}
+    )
+    assert len(listed.json()) == 1
+
+    # Ending theirs leaves mine working
+    await client.delete(
+        f"{PREFIX}/auth/sessions", headers={"Authorization": f"Bearer {theirs['access_token']}"}
+    )
+    login = await client.post(
+        f"{PREFIX}/auth/login",
+        json={"email": REGISTER["email"], "password": REGISTER["password"]},
+    )
+    assert login.status_code == 200
+    mine_listed = await client.get(
+        f"{PREFIX}/auth/sessions", headers={"Authorization": f"Bearer {mine['access_token']}"}
+    )
+    assert len(mine_listed.json()) == 2
+
+
+# --- Password -----------------------------------------------------------------
+
+
+async def test_changing_the_password_needs_the_old_one_and_ends_every_session(
+    client: AsyncClient,
+):
+    body = await register(client)
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
+
+    wrong = await client.post(
+        f"{PREFIX}/auth/me/password",
+        json={"current_password": "not-it-at-all", "new_password": "brand-new-pass"},
+        headers=headers,
+    )
+    assert wrong.status_code == 400
+    assert wrong.json()["detail"] == "Current password is incorrect"
+
+    short = await client.post(
+        f"{PREFIX}/auth/me/password",
+        json={"current_password": REGISTER["password"], "new_password": "short"},
+        headers=headers,
+    )
+    assert short.status_code == 422
+
+    changed = await client.post(
+        f"{PREFIX}/auth/me/password",
+        json={"current_password": REGISTER["password"], "new_password": "brand-new-pass"},
+        headers=headers,
+    )
+    assert changed.status_code == 200
+    assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
+
+    old = await client.post(
+        f"{PREFIX}/auth/login",
+        json={"email": REGISTER["email"], "password": REGISTER["password"]},
+    )
+    new = await client.post(
+        f"{PREFIX}/auth/login", json={"email": REGISTER["email"], "password": "brand-new-pass"}
+    )
+    assert (old.status_code, new.status_code) == (401, 200)
+
+
+# --- Avatar -------------------------------------------------------------------
+
+
+def _png(size=(64, 64), colour=(200, 40, 40, 128)) -> bytes:
+    buffer = io.BytesIO()
+    Image.new("RGBA", size, colour).save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
+async def test_an_avatar_is_re_encoded_and_replaces_the_last_one(
+    client: AsyncClient, uploads, monkeypatch
+):
+    body = await register(client)
+    headers = {"Authorization": f"Bearer {body['access_token']}"}
+
+    first = await client.post(
+        f"{PREFIX}/auth/me/avatar", files={"file": ("me.png", _png(), "image/png")}, headers=headers
+    )
+    assert first.status_code == 200, first.text
+    url = first.json()["avatar_url"]
+    assert url.startswith("/uploads/avatars/") and url.endswith(".webp")
+    stored = uploads / "avatars" / url.rsplit("/", 1)[-1]
+    with Image.open(stored) as image:
+        assert image.format == "WEBP" and max(image.size) <= 512
+
+    second = await client.post(
+        f"{PREFIX}/auth/me/avatar",
+        files={"file": ("big.png", _png((1200, 800)), "image/png")},
+        headers=headers,
+    )
+    assert second.json()["avatar_url"] != url
+    # The old file is gone, so only the current one is on disk
+    assert [path.name for path in (uploads / "avatars").iterdir()] == [
+        second.json()["avatar_url"].rsplit("/", 1)[-1]
+    ]
+
+    not_an_image = await client.post(
+        f"{PREFIX}/auth/me/avatar",
+        files={"file": ("me.png", b"<svg onload=alert(1)>", "image/png")},
+        headers=headers,
+    )
+    assert not_an_image.status_code == 400
+
+    monkeypatch.setattr(settings, "MAX_AVATAR_BYTES", 1024)
+    too_big = await client.post(
+        f"{PREFIX}/auth/me/avatar",
+        files={"file": ("big.png", _png((600, 600), (1, 2, 3, 255)) + b"\0" * 2048, "image/png")},
+        headers=headers,
+    )
+    assert too_big.status_code == 413
+
+    removed = await client.delete(f"{PREFIX}/auth/me/avatar", headers=headers)
+    assert removed.json()["avatar_url"] is None
+    assert list((uploads / "avatars").iterdir()) == []
+
+
+# --- Closing an account -------------------------------------------------------
+
+
+async def test_closing_an_account_leaves_everyone_else_alone(
+    client: AsyncClient, session: AsyncSession, uploads
+):
+    leaving = await register(client)
+    staying = await register(client, email="staying@example.com")
+    leaving_headers = {"Authorization": f"Bearer {leaving['access_token']}"}
+    staying_headers = {"Authorization": f"Bearer {staying['access_token']}"}
+    for headers in (leaving_headers, staying_headers):
+        await client.post(
+            f"{PREFIX}/eating/foods",
+            json={"name": "Moj hleb", "kcal": 250, "protein": 9, "carbs": 48, "fat": 2},
+            headers=headers,
+        )
+        await client.post(
+            f"{PREFIX}/eating/meals", json={"day": "2026-10-01", "title": "Lunch"}, headers=headers
+        )
+    await client.post(
+        f"{PREFIX}/auth/me/avatar",
+        files={"file": ("me.png", _png(), "image/png")},
+        headers=leaving_headers,
+    )
+
+    assert (await client.delete(f"{PREFIX}/auth/me", headers=leaving_headers)).status_code == 200
+
+    # Their token dies with the account, and so does their avatar file
+    assert (await client.get(f"{PREFIX}/auth/me", headers=leaving_headers)).status_code == 401
+    assert list((uploads / "avatars").iterdir()) == []
+    # The other person still has everything
+    day = (await client.get(f"{PREFIX}/eating/days/2026-10-01", headers=staying_headers)).json()
+    assert [meal["title"] for meal in day["meals"]] == ["Lunch"]
+    mine = await client.get(
+        f"{PREFIX}/eating/foods", params={"mine": True}, headers=staying_headers
+    )
+    assert [food["name"] for food in mine.json()] == ["Moj hleb"]
+    assert await session.scalar(select(func.count()).select_from(User)) == 1
+
+
+# --- Operator routes ----------------------------------------------------------
+
+
+async def test_the_user_admin_is_for_admins_only(client: AsyncClient, session: AsyncSession):
+    member = await register(client)
+    member_headers = {"Authorization": f"Bearer {member['access_token']}"}
+    for request in (
+        client.get(f"{PREFIX}/users", headers=member_headers),
+        client.get(f"{PREFIX}/users/me", headers=member_headers),
+        client.get(f"{PREFIX}/users/{member['user']['id']}", headers=member_headers),
+        client.post(
+            f"{PREFIX}/users",
+            json={"email": "x@example.com", "password": "supersecret1", "role": "admin"},
+            headers=member_headers,
+        ),
+        client.delete(f"{PREFIX}/users/{member['user']['id']}", headers=member_headers),
+    ):
+        assert (await request).status_code == 403
+
+    admin = await register(client, email="admin@example.com")
+    row = await session.get(User, uuid.UUID(admin["user"]["id"]))
+    row.role = Role.ADMIN
+    await session.commit()
+    # The role rides in the token, so the admin signs in again to carry it
+    login = await client.post(
+        f"{PREFIX}/auth/login", json={"email": "admin@example.com", "password": "supersecret1"}
+    )
+    admin_headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    listed = await client.get(f"{PREFIX}/users", headers=admin_headers)
+    assert listed.status_code == 200
+    assert listed.json()["meta"]["total"] == 2
+    own = await client.delete(f"{PREFIX}/users/{admin['user']['id']}", headers=admin_headers)
+    assert own.status_code == 400

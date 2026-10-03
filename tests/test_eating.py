@@ -3,78 +3,16 @@ holding still afterwards — and every person's diary staying their own."""
 
 import json
 
-import pytest
 from httpx import AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Food
 from app.services import eating_seed, nutrition
-from tests.helpers import PREFIX, auth_headers
+from tests.helpers import PREFIX, SMALL_PANTRY, auth_headers
 
 DAY = "2026-09-21"
-
-FOODS = [
-    {
-        "key": "ovsene-pahuljice",
-        "name": "Ovsene pahuljice",
-        "name_en": "Oats",
-        "kcal": 379,
-        "protein": 13.2,
-        "carbs": 67.7,
-        "fat": 6.5,
-        "base_unit": "g",
-        "units": {"tbsp": 10},
-        "aliases": ["ovsenih pahuljica", "ovsene"],
-    },
-    {
-        "key": "whey",
-        "name": "Whey protein",
-        "name_en": "Whey",
-        "kcal": 380,
-        "protein": 78,
-        "carbs": 8,
-        "fat": 5,
-        "base_unit": "g",
-        "units": {"scoop": 30},
-        "aliases": ["whey proteina", "merica wheya"],
-    },
-    {
-        "key": "banana",
-        "name": "Banana",
-        "name_en": "Banana",
-        "kcal": 89,
-        "protein": 1.1,
-        "carbs": 22.8,
-        "fat": 0.3,
-        "base_unit": "g",
-        "units": {"piece": 120},
-        "aliases": ["banane"],
-    },
-    {
-        "key": "jaje",
-        "name": "Jaje",
-        "name_en": "Egg",
-        "kcal": 155,
-        "protein": 13,
-        "carbs": 1.1,
-        "fat": 11,
-        "base_unit": "g",
-        "units": {"piece": 55},
-        "aliases": ["jaja", "jajeta"],
-    },
-]
-
-
-@pytest.fixture
-async def seeds(tmp_path, monkeypatch, session: AsyncSession):
-    """A small pantry instead of the shipped one, loaded the way boot loads it."""
-    foods = tmp_path / "foods.json"
-    foods.write_text(json.dumps(FOODS), encoding="utf-8")
-    monkeypatch.setattr(eating_seed, "FOODS_FILE", foods)
-    await eating_seed.seed_foods(session)
-    await session.commit()
-    return foods
+FOODS = SMALL_PANTRY
 
 
 async def _food(client: AsyncClient, headers: dict, q: str, name: str) -> dict:
