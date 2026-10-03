@@ -80,6 +80,43 @@ UNIT_WORDS: dict[str, str] = {
     "casa": "cup",
     "porcija": "serving",
     "porcije": "serving",
+    # The same, said in English
+    "grams": "g",
+    "kilo": "kg",
+    "kilos": "kg",
+    "kilogram": "kg",
+    "kilograms": "kg",
+    "millilitres": "ml",
+    "milliliters": "ml",
+    "litre": "l",
+    "litres": "l",
+    "liter": "l",
+    "liters": "l",
+    "piece": "piece",
+    "pieces": "piece",
+    "pcs": "piece",
+    "scoops": "scoop",
+    "tablespoon": "tbsp",
+    "tablespoons": "tbsp",
+    "tbsp": "tbsp",
+    "spoon": "tbsp",
+    "spoons": "tbsp",
+    "teaspoon": "tsp",
+    "teaspoons": "tsp",
+    "tsp": "tsp",
+    "cup": "cup",
+    "cups": "cup",
+    "glass": "cup",
+    "glasses": "cup",
+    "handful": "handful",
+    "handfuls": "handful",
+    "pinch": "pinch",
+    "slice": "slice",
+    "slices": "slice",
+    "serving": "serving",
+    "servings": "serving",
+    "portion": "serving",
+    "portions": "serving",
 }
 
 # Words that stand in for a number
@@ -104,9 +141,34 @@ WORD_QUANTITY: dict[str, float] = {
     "pol": 0.5,
     "par": 2,
     "nekoliko": 3,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "half": 0.5,
+    "a": 1,
+    "an": 1,
+    "couple": 2,
+    "few": 3,
 }
 # Vague amounts: a small helping of whatever it is
-VAGUE = {"malo": 0.5, "kap": 0.25, "prstohvat": 1, "po zelji": 0.5, "po ukusu": 0.5}
+VAGUE = {
+    "malo": 0.5,
+    "kap": 0.25,
+    "prstohvat": 1,
+    "po zelji": 0.5,
+    "po ukusu": 0.5,
+    "a little": 0.5,
+    "a bit of": 0.5,
+    "a splash of": 0.25,
+    "a drop of": 0.25,
+}
 
 FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 
@@ -255,7 +317,7 @@ def read_amount(text: str) -> Amount:
         unit = "piece" if quantity and quantity <= 12 else "g"
     if unit == "serving":
         unit = "piece"
-    rest = re.sub(r"^(od|sa|sa\s+|of)\s+", "", rest).strip(" ().")
+    rest = re.sub(r"^(?:(?:od|sa|of|a|an|the)\s+)+", "", rest).strip(" ().")
     return Amount(quantity, unit, rest, vague=vague)
 
 

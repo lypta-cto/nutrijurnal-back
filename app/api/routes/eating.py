@@ -488,10 +488,13 @@ async def food_by_barcode(
 
 @router.post("/parse", response_model=ParseOut)
 async def parse_text(payload: ParseIn, session: SessionDep, user: CurrentUser) -> ParseOut:
-    """ "50g ovsenih, 1 merica whey, 1 banana" — into amounts we can add up."""
+    """ "50g ovsenih, 1 merica whey, 1 banana" — into amounts we can add up.
+    A sentence said out loud often names its meal too ("… za ručak", "for
+    breakfast …"): that is read off as the slot and left out of the food."""
     foods = await _foods_for(session, user)
     by_id = {food.id: food for food in foods}
-    found, unknown = nutrition.parse(payload.text, [_as_food_like(food) for food in foods])
+    slot, text = slots.take_slot(payload.text)
+    found, unknown = nutrition.parse(text, [_as_food_like(food) for food in foods])
     items = []
     for row in found:
         food = by_id.get(row.food.id) if row.food else None
@@ -505,7 +508,7 @@ async def parse_text(payload: ParseIn, session: SessionDep, user: CurrentUser) -
                 **nutrition.macros(_as_food_like(food) if food else None, row.grams),
             )
         )
-    return ParseOut(items=items, unknown=unknown)
+    return ParseOut(items=items, unknown=unknown, slot=slot)
 
 
 # --- The diary ----------------------------------------------------------------

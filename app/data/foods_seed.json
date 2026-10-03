@@ -20,7 +20,9 @@
    "cela jaja",
    "jajima",
    "manje jaje",
-   "veliko jaje"
+   "veliko jaje",
+   "egg",
+   "eggs"
   ]
  },
  {
@@ -40,7 +42,8 @@
    "belanca",
    "belanceta",
    "belanaca",
-   "belancad"
+   "belancad",
+   "egg whites"
   ]
  },
  {
@@ -79,7 +82,8 @@
    "mleka",
    "mlekom",
    "kravlje mleko",
-   "punomasno mleko"
+   "punomasno mleko",
+   "milk"
   ]
  },
  {
@@ -177,7 +181,9 @@
    "jogurta",
    "jogurtom",
    "balans",
-   "kiselo mleko"
+   "kiselo mleko",
+   "yogurt",
+   "yoghurt"
   ]
  },
  {
@@ -201,7 +207,8 @@
    "grckog jogurta/skyra",
    "greekos",
    "greekos jogurta",
-   "grcki"
+   "grcki",
+   "greek yoghurt"
   ]
  },
  {
@@ -345,7 +352,8 @@
    "gaude",
    "gaudom",
    "edamer",
-   "trapist"
+   "trapist",
+   "gouda"
   ]
  },
  {
@@ -363,7 +371,8 @@
   "aliases": [
    "tvrdi sir",
    "tvrdog sira",
-   "tvrdim sirom"
+   "tvrdim sirom",
+   "cheese"
   ]
  },
  {
@@ -482,7 +491,8 @@
   "aliases": [
    "puter",
    "putera",
-   "maslac"
+   "maslac",
+   "butter"
   ]
  },
  {
@@ -526,7 +536,10 @@
    "belo meso",
    "belog mesa",
    "pileceg",
-   "pilece"
+   "pilece",
+   "chicken",
+   "chicken breast",
+   "chicken breasts"
   ]
  },
  {
@@ -546,7 +559,9 @@
    "pileceg bataka",
    "batak",
    "bataka",
-   "karabatak"
+   "karabatak",
+   "chicken thighs",
+   "drumstick"
   ]
  },
  {
@@ -568,7 +583,8 @@
    "curetine",
    "curecih prsa",
    "cureca prsa",
-   "cureceg"
+   "cureceg",
+   "turkey"
   ]
  },
  {
@@ -594,7 +610,10 @@
    "junetine",
    "junece",
    "juneceg",
-   "mlevenog juneceg"
+   "mlevenog juneceg",
+   "minced beef",
+   "ground beef",
+   "beef mince"
   ]
  },
  {
@@ -612,7 +631,9 @@
    "juneceg buta",
    "junecu but",
    "biftek",
-   "juneci odrezak"
+   "juneci odrezak",
+   "beef",
+   "steak"
   ]
  },
  {
@@ -648,7 +669,8 @@
    "svinjskog filea",
    "svinjetina",
    "svinjetine",
-   "svinjski but"
+   "svinjski but",
+   "pork"
   ]
  },
  {
@@ -737,7 +759,8 @@
    "sunka",
    "sunke",
    "sunkom",
-   "pileca sunka"
+   "pileca sunka",
+   "ham"
   ]
  },
  {
@@ -778,7 +801,8 @@
    "slaninice",
    "panceta",
    "pancete",
-   "pancetom"
+   "pancetom",
+   "bacon"
   ]
  },
  {
@@ -853,7 +877,8 @@
   "units": {},
   "aliases": [
    "losos",
-   "lososa"
+   "lososa",
+   "salmon"
   ]
  },
  {
@@ -946,7 +971,11 @@
    "samlevene ovsene",
    "ovsena kasa",
    "zobene pahuljice",
-   "ovseno brasno"
+   "ovseno brasno",
+   "oats",
+   "oatmeal",
+   "porridge",
+   "rolled oats"
   ]
  },
  {
@@ -983,7 +1012,9 @@
    "pirinac",
    "pirinca",
    "pirincem",
-   "beli pirinac"
+   "beli pirinac",
+   "rice",
+   "white rice"
   ]
  },
  {
@@ -1078,7 +1109,9 @@
    "taljatele",
    "taljatela",
    "fusili",
-   "pasta"
+   "pasta",
+   "spaghetti",
+   "noodles"
   ]
  },
  {
@@ -1166,7 +1199,8 @@
    "tost",
    "tosta",
    "parceta tost hleba",
-   "kriske tost hleba"
+   "kriske tost hleba",
+   "toast"
   ]
  },
  {
@@ -1186,7 +1220,9 @@
    "hleba",
    "beli hleb",
    "polubeli hleb",
-   "vekna"
+   "vekna",
+   "bread",
+   "white bread"
   ]
  },
  {
@@ -1205,7 +1241,9 @@
    "integralni hleb",
    "integralnog hleba",
    "crni hleb",
-   "razani hleb"
+   "razani hleb",
+   "wholemeal bread",
+   "brown bread"
   ]
  },
  {
@@ -1483,7 +1521,9 @@
    "mladi krompir",
    "mladog krompira",
    "pire",
-   "pirea od krompira"
+   "pirea od krompira",
+   "potato",
+   "potatoes"
   ]
  },
  {
@@ -1501,7 +1541,8 @@
   "aliases": [
    "batat",
    "batata",
-   "slatki krompir"
+   "slatki krompir",
+   "sweet potatoes"
   ]
  },
  {
@@ -1518,7 +1559,9 @@
    "pomfrit",
    "pomfrita",
    "pomfritom",
-   "pommes"
+   "pommes",
+   "fries",
+   "chips"
   ]
  },
  {
@@ -1537,7 +1580,9 @@
   "aliases": [
    "paradajz",
    "paradajza",
-   "paradajzom"
+   "paradajzom",
+   "tomato",
+   "tomatoes"
   ]
  },
  {
@@ -1620,7 +1665,9 @@
    "krastavac",
    "krastavca",
    "krastavci",
-   "krastavcem"
+   "krastavcem",
+   "cucumber",
+   "cucumbers"
   ]
  },
  {
@@ -1662,7 +1709,9 @@
    "paprikom",
    "crvena paprika",
    "crvene paprike",
-   "babura"
+   "babura",
+   "pepper",
+   "peppers"
   ]
  },
  {
@@ -1727,7 +1776,9 @@
    "iceberg salata",
    "iceberg salate",
    "iceberg",
-   "ajsberg"
+   "ajsberg",
+   "salad",
+   "lettuce"
   ]
  },
  {
@@ -1848,7 +1899,9 @@
    "sargarepe",
    "sargarepu",
    "mrkva",
-   "mrkve"
+   "mrkve",
+   "carrot",
+   "carrots"
   ]
  },
  {
@@ -1864,7 +1917,8 @@
   "aliases": [
    "brokoli",
    "brokolija",
-   "brokolijem"
+   "brokolijem",
+   "broccoli"
   ]
  },
  {
@@ -2085,7 +2139,9 @@
   },
   "aliases": [
    "avokado",
-   "avokada"
+   "avokada",
+   "avocado",
+   "avocados"
   ]
  },
  {
@@ -2107,7 +2163,8 @@
    "banani",
    "zrele banane",
    "zamrznuta banana",
-   "male banane"
+   "male banane",
+   "bananas"
   ]
  },
  {
@@ -2125,7 +2182,9 @@
   "aliases": [
    "jabuka",
    "jabuke",
-   "jabuku"
+   "jabuku",
+   "apple",
+   "apples"
   ]
  },
  {
@@ -2142,7 +2201,9 @@
   },
   "aliases": [
    "kruska",
-   "kruske"
+   "kruske",
+   "pear",
+   "pears"
   ]
  },
  {
@@ -2161,7 +2222,9 @@
    "pomorandza",
    "pomorandze",
    "mandarina",
-   "mandarine"
+   "mandarine",
+   "orange",
+   "oranges"
   ]
  },
  {
@@ -2180,7 +2243,8 @@
    "borovnica",
    "borovnice",
    "borovnicama",
-   "borovnicu"
+   "borovnicu",
+   "blueberries"
   ]
  },
  {
@@ -2236,7 +2300,8 @@
   "aliases": [
    "jagoda",
    "jagode",
-   "jagodama"
+   "jagodama",
+   "strawberries"
   ]
  },
  {
@@ -2388,7 +2453,8 @@
    "kikiriki putera",
    "kikiriki puterom",
    "puter od kikirikija",
-   "kikiriki-puter"
+   "kikiriki-puter",
+   "peanut butter"
   ]
  },
  {
@@ -2427,7 +2493,8 @@
    "bademi",
    "bademom",
    "badem listici",
-   "badem listica"
+   "badem listica",
+   "almonds"
   ]
  },
  {
@@ -2446,7 +2513,8 @@
    "orah",
    "oraha",
    "orasi",
-   "orasa"
+   "orasa",
+   "walnuts"
   ]
  },
  {
@@ -2598,7 +2666,8 @@
   "aliases": [
    "maslinovo ulje",
    "maslinovog ulja",
-   "maslinovim uljem"
+   "maslinovim uljem",
+   "olive oil"
   ]
  },
  {
@@ -2889,7 +2958,8 @@
   "aliases": [
    "med",
    "meda",
-   "medom"
+   "medom",
+   "honey"
   ]
  },
  {
@@ -3051,7 +3121,9 @@
    "proteinski prah",
    "whey proteina od cokolade",
    "whey proteina od vanile",
-   "surutka"
+   "surutka",
+   "protein powder",
+   "protein shake"
   ]
  },
  {
@@ -3441,7 +3513,8 @@
    "voda",
    "vode",
    "vodom",
-   "mineralna voda"
+   "mineralna voda",
+   "water"
   ]
  },
  {
@@ -3461,7 +3534,8 @@
    "kafa",
    "kafe",
    "espreso",
-   "espresso"
+   "espresso",
+   "coffee"
   ]
  },
  {

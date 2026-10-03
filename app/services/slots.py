@@ -30,6 +30,45 @@ WORDS: dict[str, tuple[str, ...]] = {
 _WORD_SLOT = {word: slot for slot, words in WORDS.items() for word in words}
 
 
+# The slot as it is said in a sentence, with the little word in front of it:
+# "za ručak", "na doručku", "for lunch", "at dinner", or "Večera:" as a label.
+# Written with both spellings of č/ž, because dictation and typing disagree.
+_SLOT_FORMS = {
+    "breakfast": r"doru[cč](?:ak|ka|ku|kom)|breakfast",
+    "lunch": r"ru[cč](?:ak|ka|ku|kom)|lunch",
+    "dinner": r"ve[cč]er(?:a|e|u|i|om)|dinner|supper",
+    "snack": r"u[zž]in(?:a|e|u|i|om)|snacks?",
+}
+_SLOT_PHRASE = re.compile(
+    r"(?:\b(?:za|na|u|for|at|as)\s+(?:my\s+|moj\s+)?)?\b("
+    + "|".join(f"(?P<{slot}>{forms})" for slot, forms in _SLOT_FORMS.items())
+    + r")\b\s*[:\-–]?",
+    re.IGNORECASE,
+)
+# What people say before the food itself: "dodaj …", "I had …", "pojeo sam …"
+_LEADING = re.compile(
+    r"^\s*(?:dodaj(?:te)?|upi[sš]i|zapi[sš]i|unesi|add|log|i\s+(?:had|ate)|had|ate"
+    r"|(?:po)?jeo\s+sam|(?:po)?jela\s+sam|imao\s+sam|imala\s+sam)\b[\s,:]*",
+    re.IGNORECASE,
+)
+# Joining words left dangling at either end once the slot is taken out
+_DANGLING = re.compile(r"^(?:\s|,|;|\band\b|\bi\b)+|(?:\s|,|;|\band\b|\bi\b)+$", re.IGNORECASE)
+
+
+def take_slot(text: str) -> tuple[str | None, str]:
+    """The slot a sentence names, and the sentence without it — so
+    "dodaj 200 g piletine i 100 g pirinča za ručak" is lunch, and the rest is
+    only the food: "200 g piletine i 100 g pirinča"."""
+    slot = None
+    match = _SLOT_PHRASE.search(text or "")
+    if match:
+        slot = next(name for name in _SLOT_FORMS if match.group(name))
+        text = text[: match.start()] + " " + text[match.end() :]
+    text = _LEADING.sub("", text or "")
+    text = _DANGLING.sub("", re.sub(r"\s+", " ", text))
+    return slot, text.strip()
+
+
 def slot_for_time(at: time | None) -> str | None:
     """The hours a meal is usually eaten in; None when it was not timed."""
     if at is None:

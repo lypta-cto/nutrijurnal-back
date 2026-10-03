@@ -283,6 +283,8 @@ class ParsedItem(Macros):
 class ParseOut(BaseModel):
     items: list[ParsedItem] = []
     unknown: list[str] = []
+    # The slot the sentence named — "za ručak", "for breakfast" — if it did
+    slot: Slot | None = None
 
 
 class ScanOut(BaseModel):
