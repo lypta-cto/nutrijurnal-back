@@ -7,6 +7,7 @@ fills in the four numbers from the label themselves.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 import httpx
@@ -15,6 +16,13 @@ API = "https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
 FIELDS = "product_name,product_name_sr,brands,nutriments,serving_size,quantity,product_quantity"
 # Open Food Facts asks every client to name itself, so a misbehaving one can be told apart
 AGENT = "Nutrijurnal/0.1 (food diary)"
+
+# A serving is mostly written with a count first — "1 portion (60 g)",
+# "2 keksa (25 g)" — so the weight is the number that carries a unit
+SERVING_WEIGHT = re.compile(r"(\d+(?:[.,]\d+)?)\s*(?:g|gr|grams?|ml)\b", re.IGNORECASE)
+BARE_NUMBER = re.compile(r"\s*(\d+(?:[.,]\d+)?)\s*")
+# "500 ml", "1 L", "1,5 l", "75 cl" — sold by volume, so measured in millilitres
+BY_VOLUME = re.compile(r"\d\s*(?:ml|cl|dl|l|lit(?:re|er)s?)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -64,6 +72,15 @@ def read_barcode(content: bytes) -> str | None:
     return None
 
 
+def serving_grams(serving: str) -> float | None:
+    """The grams (or millilitres) of one serving as Open Food Facts writes it."""
+    match = SERVING_WEIGHT.search(serving) or BARE_NUMBER.fullmatch(serving)
+    if match is None:
+        return None
+    grams = float(match.group(1).replace(",", "."))
+    return grams if grams > 0 else None
+
+
 def _number(nutriments: dict, *names: str) -> float | None:
     for name in names:
         value = nutriments.get(name)
@@ -99,14 +116,6 @@ async def lookup(barcode: str) -> Product | None:
     name = (product.get("product_name_sr") or product.get("product_name") or "").strip()
     if not name:
         return None
-    serving = product.get("serving_size") or ""
-    grams = None
-    digits = "".join(ch if ch.isdigit() or ch == "." else " " for ch in serving).split()
-    if digits:
-        try:
-            grams = float(digits[0])
-        except ValueError:
-            grams = None
     return Product(
         barcode=barcode,
         name=name[:120],
@@ -115,6 +124,6 @@ async def lookup(barcode: str) -> Product | None:
         protein=_number(nutriments, "proteins_100g") or 0.0,
         carbs=_number(nutriments, "carbohydrates_100g") or 0.0,
         fat=_number(nutriments, "fat_100g") or 0.0,
-        base_unit="ml" if "ml" in (product.get("quantity") or "").lower() else "g",
-        serving_grams=grams,
+        base_unit="ml" if BY_VOLUME.search(product.get("quantity") or "") else "g",
+        serving_grams=serving_grams(product.get("serving_size") or ""),
     )

@@ -12,6 +12,7 @@ from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Food
+from app.services import food_lookup
 from tests.helpers import PREFIX, auth_headers, own_food
 
 # zxing-cpp adds the check digit: 385678901234 → 3856789012348
@@ -160,14 +161,6 @@ async def test_what_open_food_facts_says_is_read_per_100_g(
     assert {name: food[name] for name in expected} == expected
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/food_lookup.py lookup(): serving grams are the FIRST number in "
-        "serving_size, so Open Food Facts' common '1 portion (30 g)' / '2 keksa (25 g)' form "
-        "gives the food a 'piece' of 1 g / 2 g — one bar or one portion then counts as ~nothing"
-    ),
-)
 async def test_a_serving_written_with_a_count_uses_its_grams(
     client: AsyncClient, me, open_food_facts
 ):
@@ -182,15 +175,7 @@ async def test_a_serving_written_with_a_count_uses_its_grams(
     assert food["units"] == {"piece": 60}
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/food_lookup.py lookup(): base_unit is 'ml' only when the product's "
-        "quantity contains 'ml', so drinks sold by the litre ('1 L', '1,5 l') are stored "
-        "per 100 g and offered in grams"
-    ),
-)
-@pytest.mark.parametrize("quantity", ["1 L", "1,5 l"])
+@pytest.mark.parametrize("quantity", ["1 L", "1,5 l", "330ml", "75 cl"])
 async def test_a_drink_sold_by_the_litre_is_measured_in_millilitres(
     client: AsyncClient, me, open_food_facts, quantity
 ):
@@ -203,6 +188,39 @@ async def test_a_drink_sold_by_the_litre_is_measured_in_millilitres(
     food = (await _scan(client, me, photo_of(EAN))).json()["food"]
 
     assert food["base_unit"] == "ml"
+
+
+@pytest.mark.parametrize(
+    ("serving", "grams"),
+    [
+        ("30 g", 30),
+        ("2 keksa (25 g)", 25),
+        ("1 bar (40g)", 40),
+        ("12,5 g", 12.5),
+        ("250 ml", 250),
+        ("60", 60),
+        ("1 portion", None),
+        ("", None),
+        ("0 g", None),
+    ],
+)
+def test_a_serving_size_is_read_by_the_number_with_a_unit(serving, grams):
+    assert food_lookup.serving_grams(serving) == grams
+
+
+@pytest.mark.parametrize("quantity", ["500 g", "1 lb", "6 x 25 g", ""])
+async def test_a_packet_sold_by_weight_stays_in_grams(
+    client: AsyncClient, me, open_food_facts, quantity
+):
+    open_food_facts.products[EAN] = {
+        "product_name": "Keks",
+        "quantity": quantity,
+        "nutriments": {"energy-kcal_100g": 460},
+    }
+
+    food = (await _scan(client, me, photo_of(EAN))).json()["food"]
+
+    assert food["base_unit"] == "g"
 
 
 @pytest.mark.parametrize(
