@@ -3,7 +3,6 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 import jwt
-import pytest
 from httpx import AsyncClient
 from PIL import Image
 from sqlalchemy import func, select, update
@@ -423,15 +422,6 @@ async def test_an_expired_or_unknown_refresh_token_is_refused(
     assert (await client.post(f"{PREFIX}/auth/refresh")).status_code == 401
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/api/routes/auth.py refresh(): clear_refresh_cookie() is called on the "
-        "injected Response and then HTTPException is raised; FastAPI answers the exception "
-        "with a fresh response, so the Set-Cookie that clears the dead token is dropped and "
-        "the browser keeps sending it until it expires"
-    ),
-)
 async def test_a_refused_refresh_token_is_cleared_from_the_browser(
     client: AsyncClient, session: AsyncSession
 ):
@@ -441,7 +431,9 @@ async def test_a_refused_refresh_token_is_cleared_from_the_browser(
     refused = await client.post(f"{PREFIX}/auth/refresh")
 
     assert refused.status_code == 401
+    assert refused.json() == {"detail": "Invalid or expired refresh token"}
     assert f'{settings.REFRESH_COOKIE_NAME}=""' in refused.headers.get("set-cookie", "")
+    assert f"Path={PREFIX}/auth" in refused.headers["set-cookie"]
 
 
 async def test_logout_without_a_cookie_still_signs_out(client: AsyncClient):

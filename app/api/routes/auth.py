@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Cookie, File, HTTPException, Request, Response, UploadFile, status
+from fastapi.responses import JSONResponse
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
@@ -101,7 +102,7 @@ async def refresh(
     response: Response,
     session: SessionDep,
     refresh_token: RefreshCookie = None,
-) -> AuthResponse:
+) -> AuthResponse | JSONResponse:
     """Exchanges the refresh cookie for a new access token, rotating the cookie."""
     if not refresh_token:
         raise HTTPException(
@@ -115,11 +116,15 @@ async def refresh(
     )
 
     if rotated is None:
-        auth_service.clear_refresh_cookie(response)
-        raise HTTPException(
+        # Answered as a response of its own: a raised HTTPException gets a
+        # fresh response and drops the Set-Cookie that clears the dead token,
+        # which the browser would otherwise keep sending until it expires
+        refused = JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired refresh token",
+            content={"detail": "Invalid or expired refresh token"},
         )
+        auth_service.clear_refresh_cookie(refused)
+        return refused
 
     user, new_raw = rotated
     auth_service.set_refresh_cookie(response, new_raw)
