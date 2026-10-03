@@ -349,6 +349,12 @@ def read_amount(text: str) -> Amount:
             rest = rest[len(first) :].strip()
 
     unit = ""
+    if rest and quantity is not None:
+        # "half a litre of milk": the little words English puts between an
+        # amount and its unit, taken out only when a unit really follows
+        bridged = re.sub(r"^(?:(?:of|an?)\s+)+", "", rest)
+        if bridged.split(" ")[0].strip(".") in UNIT_WORDS:
+            rest = bridged
     if rest:
         head = rest.split(" ")[0].strip(".")
         mapped = UNIT_WORDS.get(head)

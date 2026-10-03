@@ -444,20 +444,18 @@ def test_a_number_at_the_end_without_a_unit_stays_in_the_name(written, name):
     assert (amount.quantity, amount.unit, amount.name) == (1, "piece", name)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py read_amount(): after 'half' the 'a' in front of the "
-        "unit is taken for part of the name, so the unit is never read — 'half a litre of "
-        "milk' is half a glass (125 ml) and 'half a kilo of chicken' half a piece (75 g)"
-    ),
-)
 @pytest.mark.parametrize(
     ("text", "rows"),
     [
         ("half a litre of milk", [("Mleko 2.8%", "ml", 500)]),
         ("half a kilo of chicken", [("Pileći file", "g", 500)]),
+        ("two glasses of milk", [("Mleko 2.8%", "cup", 500)]),
+        # Without a unit after it, "an" is only the food's article
+        ("half an apple", [("Jabuka", "piece", 90)]),
     ],
 )
 async def test_half_a_unit_said_in_english(client: AsyncClient, me, text, rows):
-    assert _rows(await _parse(client, me, text)) == rows
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
