@@ -13,8 +13,9 @@ services:
     name: nutrijurnal-api
     runtime: docker
     dockerfilePath: ./Dockerfile
-    # Next to the Supabase project (eu-central-1 is Frankfurt) — every query
-    # pays the round trip. A service's region cannot be changed later.
+    # The Supabase project is in eu-west-1 (Ireland); Render has no Irish
+    # region and Frankfurt is the nearest — every query pays that round trip.
+    # A service's region cannot be changed later.
     region: frankfurt
     # Not free: a free service sleeps after 15 idle minutes, and the reminder
     # loop sleeps with it, so nobody's lunch reminder would ever arrive.
@@ -74,13 +75,14 @@ services:
       - key: VAPID_PRIVATE_KEY
         sync: false
 
-      # The Vercel address. Links, CORS and the push sender's contact all use
-      # it; change all four together when the real domain arrives.
+      # The Vercel address (plain nutrijurnal.vercel.app belongs to someone
+      # else). Links, CORS and the push sender's contact all use it; change
+      # all four together when the real domain arrives.
       - key: FRONTEND_URL
-        value: https://nutrijurnal.vercel.app
+        value: https://nutrijurnal-eta.vercel.app
       - key: CORS_ORIGINS
-        value: https://nutrijurnal.vercel.app
+        value: https://nutrijurnal-eta.vercel.app
       - key: BACKEND_URL
-        value: https://nutrijurnal.vercel.app
+        value: https://nutrijurnal-eta.vercel.app
       - key: VAPID_SUBJECT
-        value: https://nutrijurnal.vercel.app
+        value: https://nutrijurnal-eta.vercel.app
