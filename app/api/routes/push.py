@@ -9,6 +9,7 @@ own; someone else's reminder is a 404.
 
 import asyncio
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy import select
@@ -30,6 +31,10 @@ from app.services import push, reminders, slots
 router = APIRouter(tags=["reminders"])
 
 MAX_REMINDERS = 20
+
+
+def _now() -> datetime:
+    return datetime.now(UTC)
 
 
 @router.get("/push/config", response_model=PushConfig)
@@ -183,10 +188,15 @@ async def update_reminder(
 ) -> ReminderRead:
     reminder = await _own_reminder(session, user, reminder_id)
     fields = payload.model_dump(exclude_unset=True)
-    if fields.get("at") is not None:
-        reminder.at = payload.at.replace(second=0, microsecond=0)
-        # A new time is a new appointment: it may go out again today
-        reminder.last_sent_on = None
+    at = payload.at.replace(second=0, microsecond=0) if fields.get("at") is not None else None
+    if at is not None and at != reminder.at:
+        reminder.at = at
+        # A new time later today is a new appointment and may go out again;
+        # one already behind the person's clock must not fire a second time
+        # straight away for a day it was already sent on
+        local = _now().astimezone(reminders.zone_of(user.timezone))
+        if at > local.time():
+            reminder.last_sent_on = None
     if fields.get("weekdays") is not None:
         reminder.weekdays = reminders.mask_of(payload.weekdays)
     if fields.get("enabled") is not None:

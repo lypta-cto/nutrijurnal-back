@@ -10,6 +10,7 @@ from httpx import AsyncClient
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.routes import push as push_routes
 from app.core.config import settings
 from app.models import PushSubscription, Reminder, User
 from app.services import push, reminders
@@ -214,8 +215,15 @@ async def test_a_failing_push_service_keeps_the_browser_and_a_gone_one_drops_it(
 # --- Once a day, and again after a change -----------------------------------------
 
 
+@pytest.fixture
+def lunchtime(monkeypatch) -> datetime:
+    """The API's own clock stopped at the loop's, for edits made "now"."""
+    monkeypatch.setattr(push_routes, "_now", lambda: LUNCHTIME)
+    return LUNCHTIME
+
+
 async def test_moving_a_reminder_lets_it_go_out_again_the_same_day(
-    client: AsyncClient, outbox: Outbox
+    client: AsyncClient, outbox: Outbox, lunchtime
 ):
     headers = await person(client, "moved@example.com")
     reminder = await remind(client, headers, kind="water", at="13:00")
@@ -228,6 +236,24 @@ async def test_moving_a_reminder_lets_it_go_out_again_the_same_day(
     assert moved.json()["last_sent_on"] is None
     assert await reminders.tick(datetime(2026, 9, 21, 14, 1, tzinfo=UTC), push.send) == 1
     assert await reminders.tick(datetime(2026, 9, 21, 14, 2, tzinfo=UTC), push.send) == 0
+
+
+@pytest.mark.parametrize("earlier", ["12:45", "13:00"])
+async def test_moving_a_sent_reminder_to_a_time_already_past_does_not_send_it_again(
+    client: AsyncClient, outbox: Outbox, lunchtime, earlier
+):
+    headers = await person(client, "earlier@example.com")
+    reminder = await remind(client, headers, kind="water", at="13:00")
+    assert await reminders.tick(LUNCHTIME, push.send) == 1
+
+    moved = await client.patch(
+        f"{PREFIX}/reminders/{reminder['id']}", json={"at": earlier}, headers=headers
+    )
+
+    assert moved.json()["last_sent_on"] == "2026-09-21"
+    assert await reminders.tick(datetime(2026, 9, 21, 11, 3, tzinfo=UTC), push.send) == 0
+    # Tomorrow it goes out at its new time
+    assert await reminders.tick(datetime(2026, 9, 22, 11, 1, tzinfo=UTC), push.send) == 1
 
 
 async def test_switching_a_reminder_off_and_on_does_not_send_it_twice(
