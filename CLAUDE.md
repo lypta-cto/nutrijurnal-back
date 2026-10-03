@@ -42,6 +42,8 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   memory on the client) + rotating refresh token (30 days, httpOnly cookie on
   `/api/v1/auth`, SHA-256 hash in `refresh_tokens`). `GET /auth/providers` tells the
   login screen whether Google is on (only when `GOOGLE_CLIENT_ID`/`SECRET` are set).
+  Google admits only `GOOGLE_ALLOWED_EMAILS` (emails or `@domains`), checked before an
+  account is created or linked — signing up with a password stays open to anyone.
   `DELETE /auth/me` closes an account; every user table cascades.
 - **throttling** (`core/rate_limit.py`) — an in-process, per-worker limiter on the
   doors open without an account: sign-in per address (`LOGIN_PER_ADDRESS`, every try)

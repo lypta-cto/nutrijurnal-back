@@ -75,6 +75,17 @@ services:
       - key: VAPID_PRIVATE_KEY
         sync: false
 
+      # Google sign-in, for the accounts let in by name. The client is
+      # "Nutrijurnal" in Google Cloud; its redirect URI is
+      # {BACKEND_URL}/api/v1/auth/google/callback. The allowed list stays out
+      # of this public file: comma-separated emails or @domains, set on Render.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_ALLOWED_EMAILS
+        sync: false
+
       # The Vercel address (plain nutrijurnal.vercel.app belongs to someone
       # else). Links, CORS and the push sender's contact all use it; change
       # all four together when the real domain arrives.

@@ -73,6 +73,11 @@ async def google_callback(request: Request):
         # for your address could take over the matching local account below.
         return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=google_unverified")
 
+    if not settings.google_email_allowed(email):
+        # Checked before any account is touched: an address nobody let in
+        # neither creates an account nor gets linked to an existing one
+        return RedirectResponse(f"{settings.FRONTEND_URL}/login?error=google_not_allowed")
+
     async with SessionLocal() as session:
         user = await auth_service.get_user_by_google_sub(session, google_sub)
 

@@ -103,6 +103,30 @@ class Settings(BaseSettings):
     # Authorised redirect URI: {BACKEND_URL}/api/v1/auth/google/callback
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
+    # Who may use Google at all — comma-separated emails or whole domains
+    # ("ana@gmail.com, @lypta.ai"). Signing up with a password stays open to
+    # anyone; Google is the door for people let in by name, so an address
+    # not on this list is turned away even if it already has an account.
+    # Empty, Google lets nobody in.
+    GOOGLE_ALLOWED_EMAILS: Annotated[list[str], NoDecode] = []
+
+    @field_validator("GOOGLE_ALLOWED_EMAILS", mode="before")
+    @classmethod
+    def _split_allowed_emails(cls, value: str | list[str]) -> list[str]:
+        if isinstance(value, str):
+            return [entry.strip().lower() for entry in value.split(",") if entry.strip()]
+        return [entry.strip().lower() for entry in value]
+
+    def google_email_allowed(self, email: str) -> bool:
+        needle = email.strip().lower()
+        for entry in self.GOOGLE_ALLOWED_EMAILS:
+            if entry.startswith("@"):
+                if needle.endswith(entry):
+                    return True
+            elif needle == entry:
+                return True
+        return False
+
     BACKEND_URL: str = "http://localhost:8004"
 
     @property
