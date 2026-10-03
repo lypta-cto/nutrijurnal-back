@@ -59,6 +59,9 @@ def test_a_foods_search_key_holds_each_name_once():
         # Past a dozen, a bare number is a weight, not a count
         ("150 piletine", 150, "g", "piletine"),
         ("50g od ovsenih", 50, "g", "ovsenih"),
+        # A share of fat is part of the name, not a count
+        ("3,5% mleko", 1, "piece", "3,5% mleko"),
+        ("2 dl 3.2% jogurta", 2, "dl", "3.2% jogurta"),
     ],
 )
 def test_an_amount_is_read_off_the_front(written, quantity, unit, name):

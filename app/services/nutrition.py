@@ -197,7 +197,8 @@ FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 # A comma between two digits is the Serbian decimal comma ("0,5 l mleka",
 # "31,25 g") and stays inside its amount; every other comma separates foods
 SPLIT = re.compile(r"[\n;+]|(?<!\d),|,(?!\d)|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
-NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*(?:/\s*(\d+))?")
+# A number followed by "%" is part of the name ("3,5% mleko"), not an amount
+NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)(?![\d.,]*\s*%)\s*(?:/\s*(\d+))?")
 
 
 def strip_accents(text: str) -> str:
