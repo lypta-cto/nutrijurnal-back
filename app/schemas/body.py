@@ -5,9 +5,11 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.eating import DiaryDay
+
 
 class WaterWrite(BaseModel):
-    day: date
+    day: DiaryDay
     # A glass, a bottle, a jug — never a bathtub
     ml: int = Field(gt=0, le=5000)
 

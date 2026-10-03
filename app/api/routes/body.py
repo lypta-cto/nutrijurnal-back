@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from app.api.deps import CurrentUser, SessionDep
 from app.models.body import WaterEntry, WeightEntry
 from app.schemas.body import WaterDay, WaterTotal, WaterWrite, WeightRead, WeightWrite
+from app.schemas.eating import DiaryDay
 from app.services import goals
 
 router = APIRouter(prefix="/eating", tags=["water and weight"])
@@ -156,7 +157,7 @@ async def read_latest_weight(session: SessionDep, user: CurrentUser) -> WeightRe
 
 @router.put("/weight/{day}", response_model=WeightRead)
 async def write_weight(
-    day: date, payload: WeightWrite, session: SessionDep, user: CurrentUser
+    day: DiaryDay, payload: WeightWrite, session: SessionDep, user: CurrentUser
 ) -> WeightRead:
     """One number a day: weighing again the same day corrects it. The newest
     weight is also the one the goal calculator starts from — when it is one

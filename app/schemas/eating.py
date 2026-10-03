@@ -1,16 +1,32 @@
 """What the diary sends and accepts."""
 
 import uuid
-from datetime import date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, field_validator
+from pydantic_core import PydanticCustomError
 
 from app.schemas.goals import GoalProfile
 
 # Where a meal sits in the day — the diary groups by it (services/slots.py)
 Slot = Literal["breakfast", "lunch", "dinner", "snack"]
+
+
+def _lived_somewhere(day: date) -> date:
+    """Every timezone's today is within a day of UTC's, so a day further
+    ahead has not come anywhere yet. Written there, it would sit on a page
+    Today never opens — the meal would simply vanish."""
+    if day > datetime.now(UTC).date() + timedelta(days=1):
+        raise PydanticCustomError(
+            "day_to_come", "That day hasn't come yet — pick today or an earlier day"
+        )
+    return day
+
+
+# A day something is written onto: today, or any day before it
+DiaryDay = Annotated[date, AfterValidator(_lived_somewhere)]
 
 # Bounds on what a person can write into a public database: generous for any
 # real recipe, small enough that one request can't store a novel
@@ -167,7 +183,7 @@ class MealRead(Macros):
 
 
 class MealWrite(BaseModel):
-    day: date
+    day: DiaryDay
     at: time | None = None
     # Left out: the one item's name, or the slot's ("Breakfast")
     title: str | None = Field(default=None, max_length=160)
@@ -178,7 +194,7 @@ class MealWrite(BaseModel):
 
 
 class MealPatch(BaseModel):
-    day: date | None = None
+    day: DiaryDay | None = None
     at: time | None = None
     title: str | None = Field(default=None, min_length=1, max_length=160)
     slot: Slot | None = None
@@ -187,7 +203,7 @@ class MealPatch(BaseModel):
 
 class FromRecipe(BaseModel):
     recipe_id: uuid.UUID
-    day: date
+    day: DiaryDay
     at: time | None = None
     slot: Slot | None = None
     # How many servings of it were actually eaten
@@ -197,7 +213,7 @@ class FromRecipe(BaseModel):
 class MealCopy(BaseModel):
     """The same plate again, onto another day — or the same one."""
 
-    day: date
+    day: DiaryDay
     # Left out: the time and the slot it had
     at: time | None = None
     slot: Slot | None = None

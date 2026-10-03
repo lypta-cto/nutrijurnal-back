@@ -33,6 +33,7 @@ from app.schemas.eating import (
     DayCopy,
     DayRead,
     DayTotals,
+    DiaryDay,
     FoodPatch,
     FoodPick,
     FoodRead,
@@ -805,7 +806,7 @@ async def copy_meal(
 
 @router.post("/days/{day}/copy", response_model=list[MealRead], status_code=status.HTTP_201_CREATED)
 async def copy_day(
-    day: date, payload: DayCopy, session: SessionDep, user: CurrentUser
+    day: DiaryDay, payload: DayCopy, session: SessionDep, user: CurrentUser
 ) -> list[MealRead]:
     """Another day's meals onto this one — all of them, or one slot's
     ("yesterday's breakfast again")."""
