@@ -1,0 +1,3503 @@
+[
+ {
+  "key": "jaje",
+  "name": "Jaje",
+  "name_en": "Egg",
+  "kcal": 155,
+  "protein": 12.6,
+  "carbs": 1.1,
+  "fat": 10.6,
+  "base_unit": "g",
+  "units": {
+   "piece": 55
+  },
+  "aliases": [
+   "jaje",
+   "jaja",
+   "jajeta",
+   "jajetom",
+   "celo jaje",
+   "cela jaja",
+   "jajima",
+   "manje jaje",
+   "veliko jaje"
+  ]
+ },
+ {
+  "key": "belance",
+  "name": "Belance",
+  "name_en": "Egg white",
+  "kcal": 52,
+  "protein": 10.9,
+  "carbs": 0.7,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 33
+  },
+  "aliases": [
+   "belance",
+   "belanca",
+   "belanceta",
+   "belanaca",
+   "belancad"
+  ]
+ },
+ {
+  "key": "zumance",
+  "name": "Žumance",
+  "name_en": "Egg yolk",
+  "kcal": 322,
+  "protein": 15.9,
+  "carbs": 3.6,
+  "fat": 26.5,
+  "base_unit": "g",
+  "units": {
+   "piece": 17
+  },
+  "aliases": [
+   "zumance",
+   "zumanca",
+   "zumanceta"
+  ]
+ },
+ {
+  "key": "mleko",
+  "name": "Mleko 2.8%",
+  "name_en": "Milk 2.8%",
+  "kcal": 60,
+  "protein": 3.2,
+  "carbs": 4.7,
+  "fat": 2.8,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.03,
+   "cup": 250
+  },
+  "aliases": [
+   "mleko",
+   "mleka",
+   "mlekom",
+   "kravlje mleko",
+   "punomasno mleko"
+  ]
+ },
+ {
+  "key": "mleko-16",
+  "name": "Mleko 1.6%",
+  "name_en": "Semi-skimmed milk",
+  "kcal": 46,
+  "protein": 3.3,
+  "carbs": 4.8,
+  "fat": 1.6,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.03,
+   "cup": 250
+  },
+  "aliases": [
+   "mleko 1.6",
+   "polumasno mleko",
+   "lako mleko"
+  ]
+ },
+ {
+  "key": "bademovo-mleko",
+  "name": "Bademovo mleko",
+  "name_en": "Almond milk",
+  "kcal": 15,
+  "protein": 0.5,
+  "carbs": 0.6,
+  "fat": 1.2,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "cup": 250
+  },
+  "aliases": [
+   "bademovo mleko",
+   "bademovog mleka",
+   "badem mleko",
+   "bademovo"
+  ]
+ },
+ {
+  "key": "sojino-mleko",
+  "name": "Sojino mleko",
+  "name_en": "Soy milk",
+  "kcal": 45,
+  "protein": 3.3,
+  "carbs": 2.5,
+  "fat": 1.8,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.03,
+   "cup": 250
+  },
+  "aliases": [
+   "sojino mleko",
+   "sojinog mleka",
+   "soja mleko"
+  ]
+ },
+ {
+  "key": "biljno-mleko",
+  "name": "Biljno mleko",
+  "name_en": "Plant milk",
+  "kcal": 30,
+  "protein": 1.0,
+  "carbs": 3.0,
+  "fat": 1.4,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "cup": 250
+  },
+  "aliases": [
+   "biljno mleko",
+   "biljnog mleka",
+   "vode ili biljnog mleka"
+  ]
+ },
+ {
+  "key": "jogurt",
+  "name": "Jogurt",
+  "name_en": "Yogurt",
+  "kcal": 58,
+  "protein": 3.3,
+  "carbs": 4.7,
+  "fat": 2.8,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.03,
+   "cup": 250
+  },
+  "aliases": [
+   "jogurt",
+   "jogurta",
+   "jogurtom",
+   "balans",
+   "kiselo mleko"
+  ]
+ },
+ {
+  "key": "grcki-jogurt",
+  "name": "Grčki jogurt",
+  "name_en": "Greek yogurt",
+  "kcal": 90,
+  "protein": 6.5,
+  "carbs": 4.5,
+  "fat": 5.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 20,
+   "cup": 240
+  },
+  "aliases": [
+   "grcki jogurt",
+   "grckog jogurta",
+   "grcki jogurta",
+   "grckog jogurt",
+   "grckog jogurta/skyra",
+   "greekos",
+   "greekos jogurta",
+   "grcki"
+  ]
+ },
+ {
+  "key": "skyr",
+  "name": "Skyr",
+  "name_en": "Skyr",
+  "kcal": 63,
+  "protein": 10.5,
+  "carbs": 4.0,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 20,
+   "cup": 240
+  },
+  "aliases": [
+   "skyr",
+   "skyra",
+   "skyrom",
+   "islandski tip jogurta",
+   "islandski jogurt",
+   "grckog nemasnog jogurta",
+   "grcki nemasni jogurt",
+   "niskomasnog grckog jogurta",
+   "niskomasni grcki jogurt",
+   "nemasnog grckog jogurta"
+  ]
+ },
+ {
+  "key": "niskomasni-sir",
+  "name": "Niskomasni sir",
+  "name_en": "Low-fat fresh cheese (quark)",
+  "kcal": 80,
+  "protein": 12.5,
+  "carbs": 4.8,
+  "fat": 1.2,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 20,
+   "cup": 230
+  },
+  "aliases": [
+   "niskomasni sir",
+   "niskomasnog sira",
+   "proteinski sir",
+   "proteinskog sira",
+   "nemasni sir",
+   "nemasnog sira",
+   "ella sir",
+   "ella sira",
+   "ella",
+   "pilos",
+   "cottage light sira",
+   "cottage",
+   "fresh cheese",
+   "svezi sir",
+   "sir",
+   "sira",
+   "sirom",
+   "dr milk"
+  ]
+ },
+ {
+  "key": "niskomasni-namaz",
+  "name": "Niskomasni namaz",
+  "name_en": "Light cream cheese spread",
+  "kcal": 150,
+  "protein": 10.0,
+  "carbs": 4.0,
+  "fat": 10.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15
+  },
+  "aliases": [
+   "niskomasni namaz",
+   "niskomasnog namaza",
+   "krem sir",
+   "krem sira",
+   "namaz",
+   "namaza",
+   "philadelphia"
+  ]
+ },
+ {
+  "key": "kackavalj",
+  "name": "Kačkavalj",
+  "name_en": "Kashkaval cheese",
+  "kcal": 356,
+  "protein": 25.0,
+  "carbs": 1.5,
+  "fat": 28.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 20
+  },
+  "aliases": [
+   "kackavalj",
+   "kackavalja",
+   "kackavaljem",
+   "kackavalju",
+   "list kackavalja",
+   "listica kackavalja",
+   "listica kackavanja",
+   "kackavanja"
+  ]
+ },
+ {
+  "key": "parmezan",
+  "name": "Parmezan",
+  "name_en": "Parmesan",
+  "kcal": 402,
+  "protein": 38.0,
+  "carbs": 3.2,
+  "fat": 26.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 6
+  },
+  "aliases": [
+   "parmezan",
+   "parmezana",
+   "parmezanom",
+   "grana padano"
+  ]
+ },
+ {
+  "key": "gauda",
+  "name": "Gauda",
+  "name_en": "Gouda",
+  "kcal": 356,
+  "protein": 25.0,
+  "carbs": 2.2,
+  "fat": 27.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 20
+  },
+  "aliases": [
+   "gauda",
+   "gaude",
+   "gaudom",
+   "edamer",
+   "trapist"
+  ]
+ },
+ {
+  "key": "tvrdi-sir",
+  "name": "Tvrdi sir",
+  "name_en": "Hard cheese",
+  "kcal": 380,
+  "protein": 26.0,
+  "carbs": 2.0,
+  "fat": 30.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 20
+  },
+  "aliases": [
+   "tvrdi sir",
+   "tvrdog sira",
+   "tvrdim sirom"
+  ]
+ },
+ {
+  "key": "beli-sir",
+  "name": "Beli sir",
+  "name_en": "White brined cheese (feta)",
+  "kcal": 264,
+  "protein": 14.0,
+  "carbs": 4.0,
+  "fat": 21.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 25
+  },
+  "aliases": [
+   "beli sir",
+   "belog sira",
+   "feta",
+   "fete",
+   "sjenicki sir"
+  ]
+ },
+ {
+  "key": "mocarela",
+  "name": "Mocarela",
+  "name_en": "Mozzarella",
+  "kcal": 280,
+  "protein": 22.0,
+  "carbs": 2.2,
+  "fat": 21.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 25
+  },
+  "aliases": [
+   "mocarela",
+   "mocarele",
+   "mozzarella"
+  ]
+ },
+ {
+  "key": "pavlaka",
+  "name": "Pavlaka",
+  "name_en": "Sour cream 20%",
+  "kcal": 197,
+  "protein": 2.5,
+  "carbs": 3.4,
+  "fat": 20.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15
+  },
+  "aliases": [
+   "pavlaka",
+   "pavlake",
+   "pavlakom",
+   "kisela pavlaka",
+   "kisele pavlake",
+   "mileram"
+  ]
+ },
+ {
+  "key": "pavlaka-za-kuvanje",
+  "name": "Pavlaka za kuvanje",
+  "name_en": "Cooking cream 10%",
+  "kcal": 118,
+  "protein": 2.7,
+  "carbs": 3.8,
+  "fat": 10.0,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "tbsp": 15
+  },
+  "aliases": [
+   "pavlaka za kuvanje",
+   "pavlake za kuvanje",
+   "neutralne pavlake",
+   "neutralna pavlaka",
+   "pavlaka za kuvanje (light)",
+   "pavlake za kuvanje (light)",
+   "pavlaka light"
+  ]
+ },
+ {
+  "key": "slatka-pavlaka",
+  "name": "Slatka pavlaka",
+  "name_en": "Heavy cream 30%",
+  "kcal": 290,
+  "protein": 2.3,
+  "carbs": 3.0,
+  "fat": 30.0,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "tbsp": 15
+  },
+  "aliases": [
+   "slatka pavlaka",
+   "slatke pavlake"
+  ]
+ },
+ {
+  "key": "puter",
+  "name": "Puter",
+  "name_en": "Butter",
+  "kcal": 740,
+  "protein": 0.6,
+  "carbs": 0.6,
+  "fat": 82.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12,
+   "tsp": 5
+  },
+  "aliases": [
+   "puter",
+   "putera",
+   "maslac"
+  ]
+ },
+ {
+  "key": "kajmak",
+  "name": "Kajmak",
+  "name_en": "Kajmak",
+  "kcal": 420,
+  "protein": 6.0,
+  "carbs": 2.5,
+  "fat": 43.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15
+  },
+  "aliases": [
+   "kajmak",
+   "kajmaka"
+  ]
+ },
+ {
+  "key": "pileci-file",
+  "name": "Pileći file",
+  "name_en": "Chicken breast",
+  "kcal": 113,
+  "protein": 23.1,
+  "carbs": 0.0,
+  "fat": 2.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 150
+  },
+  "aliases": [
+   "pileci file",
+   "pileceg filea",
+   "pilecim fileom",
+   "piletina",
+   "piletine",
+   "pilece belo meso",
+   "pilecih prsa",
+   "pileca prsa",
+   "belo meso",
+   "belog mesa",
+   "pileceg",
+   "pilece"
+  ]
+ },
+ {
+  "key": "pileci-batak",
+  "name": "Pileći batak",
+  "name_en": "Chicken thigh",
+  "kcal": 175,
+  "protein": 19.0,
+  "carbs": 0.0,
+  "fat": 11.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 90
+  },
+  "aliases": [
+   "pileci batak",
+   "pileceg bataka",
+   "batak",
+   "bataka",
+   "karabatak"
+  ]
+ },
+ {
+  "key": "cureci-file",
+  "name": "Ćureći file",
+  "name_en": "Turkey breast",
+  "kcal": 110,
+  "protein": 24.0,
+  "carbs": 0.0,
+  "fat": 1.3,
+  "base_unit": "g",
+  "units": {
+   "piece": 150
+  },
+  "aliases": [
+   "cureci file",
+   "cureceg filea",
+   "curetina",
+   "curetine",
+   "curecih prsa",
+   "cureca prsa",
+   "cureceg"
+  ]
+ },
+ {
+  "key": "junece-mleveno",
+  "name": "Mleveno juneće meso",
+  "name_en": "Ground beef 5%",
+  "kcal": 137,
+  "protein": 21.4,
+  "carbs": 0.0,
+  "fat": 5.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "mleveno junece meso",
+   "mlevenog juneceg mesa",
+   "mlev. juneceg mesa",
+   "mlevena junetina",
+   "mlevene junetine",
+   "juneceg mlev. mesa",
+   "junece meso",
+   "juneceg mesa",
+   "junetina",
+   "junetine",
+   "junece",
+   "juneceg",
+   "mlevenog juneceg"
+  ]
+ },
+ {
+  "key": "juneci-but",
+  "name": "Juneći but",
+  "name_en": "Beef round",
+  "kcal": 125,
+  "protein": 21.5,
+  "carbs": 0.0,
+  "fat": 4.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "juneci but",
+   "juneceg buta",
+   "junecu but",
+   "biftek",
+   "juneci odrezak"
+  ]
+ },
+ {
+  "key": "mesano-mleveno",
+  "name": "Mešano mleveno meso",
+  "name_en": "Mixed ground meat",
+  "kcal": 232,
+  "protein": 17.5,
+  "carbs": 0.0,
+  "fat": 18.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "mesano mleveno meso",
+   "mesanog mlevenog mesa",
+   "mesano mleveno",
+   "mleveno meso",
+   "mlevenog mesa"
+  ]
+ },
+ {
+  "key": "svinjski-file",
+  "name": "Svinjski file",
+  "name_en": "Pork tenderloin",
+  "kcal": 143,
+  "protein": 22.0,
+  "carbs": 0.0,
+  "fat": 5.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "svinjski file",
+   "svinjskog filea",
+   "svinjetina",
+   "svinjetine",
+   "svinjski but"
+  ]
+ },
+ {
+  "key": "kobasica",
+  "name": "Roštiljska kobasica",
+  "name_en": "Grill sausage",
+  "kcal": 290,
+  "protein": 14.0,
+  "carbs": 1.5,
+  "fat": 25.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 50
+  },
+  "aliases": [
+   "kobasica",
+   "kobasice",
+   "rostiljske kobasice",
+   "rostiljska kobasica"
+  ]
+ },
+ {
+  "key": "virsle",
+  "name": "Viršle",
+  "name_en": "Hot dog sausage",
+  "kcal": 260,
+  "protein": 11.0,
+  "carbs": 2.0,
+  "fat": 23.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 45
+  },
+  "aliases": [
+   "virsle",
+   "virsli",
+   "hrenovke"
+  ]
+ },
+ {
+  "key": "suvi-vrat",
+  "name": "Suvi vrat",
+  "name_en": "Smoked pork neck",
+  "kcal": 240,
+  "protein": 24.0,
+  "carbs": 0.5,
+  "fat": 16.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "suvi vrat",
+   "suvog vrata",
+   "dimljeni vrat"
+  ]
+ },
+ {
+  "key": "pecenica",
+  "name": "Pečenica",
+  "name_en": "Smoked pork loin",
+  "kcal": 165,
+  "protein": 27.0,
+  "carbs": 0.5,
+  "fat": 6.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "pecenica",
+   "pecenice",
+   "pecenicom",
+   "dimljena pecenica"
+  ]
+ },
+ {
+  "key": "sunka",
+  "name": "Šunka",
+  "name_en": "Ham",
+  "kcal": 110,
+  "protein": 18.0,
+  "carbs": 1.0,
+  "fat": 4.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 20
+  },
+  "aliases": [
+   "sunka",
+   "sunke",
+   "sunkom",
+   "pileca sunka"
+  ]
+ },
+ {
+  "key": "prsuta",
+  "name": "Pršuta",
+  "name_en": "Prosciutto",
+  "kcal": 250,
+  "protein": 30.0,
+  "carbs": 0.5,
+  "fat": 14.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 15
+  },
+  "aliases": [
+   "prsuta",
+   "prsute",
+   "prsutom",
+   "prshuta"
+  ]
+ },
+ {
+  "key": "slanina",
+  "name": "Slanina",
+  "name_en": "Bacon",
+  "kcal": 400,
+  "protein": 13.0,
+  "carbs": 0.5,
+  "fat": 38.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 15
+  },
+  "aliases": [
+   "slanina",
+   "slanine",
+   "slaninica",
+   "slaninice",
+   "panceta",
+   "pancete",
+   "pancetom"
+  ]
+ },
+ {
+  "key": "mortadela",
+  "name": "Mortadela",
+  "name_en": "Mortadella",
+  "kcal": 300,
+  "protein": 13.0,
+  "carbs": 2.0,
+  "fat": 27.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 20
+  },
+  "aliases": [
+   "mortadela",
+   "mortadele",
+   "salama",
+   "salame"
+  ]
+ },
+ {
+  "key": "tunjevina",
+  "name": "Tunjevina",
+  "name_en": "Tuna in water",
+  "kcal": 116,
+  "protein": 26.0,
+  "carbs": 0.0,
+  "fat": 1.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 100
+  },
+  "aliases": [
+   "tunjevina",
+   "tunjevine",
+   "tunjevinom",
+   "tuna",
+   "tune",
+   "tunjevina u sopstvenom soku",
+   "tunjevine u sopstvenom sosu",
+   "tunjevine u salamuri"
+  ]
+ },
+ {
+  "key": "dimljeni-losos",
+  "name": "Dimljeni losos",
+  "name_en": "Smoked salmon",
+  "kcal": 180,
+  "protein": 22.0,
+  "carbs": 0.0,
+  "fat": 10.0,
+  "base_unit": "g",
+  "units": {
+   "slice": 20
+  },
+  "aliases": [
+   "dimljeni losos",
+   "dimljenog lososa",
+   "dimljeni"
+  ]
+ },
+ {
+  "key": "losos",
+  "name": "Losos",
+  "name_en": "Salmon",
+  "kcal": 208,
+  "protein": 20.0,
+  "carbs": 0.0,
+  "fat": 13.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "losos",
+   "lososa"
+  ]
+ },
+ {
+  "key": "oslic",
+  "name": "Oslić",
+  "name_en": "Hake fillet",
+  "kcal": 78,
+  "protein": 17.0,
+  "carbs": 0.0,
+  "fat": 0.9,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "oslic",
+   "oslica",
+   "fileta oslica",
+   "file oslica",
+   "osliceva"
+  ]
+ },
+ {
+  "key": "pastrmka",
+  "name": "Pastrmka",
+  "name_en": "Trout",
+  "kcal": 140,
+  "protein": 20.0,
+  "carbs": 0.0,
+  "fat": 6.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "pastrmka",
+   "pastrmke"
+  ]
+ },
+ {
+  "key": "sardina",
+  "name": "Sardina",
+  "name_en": "Sardines",
+  "kcal": 208,
+  "protein": 24.0,
+  "carbs": 0.0,
+  "fat": 12.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "sardina",
+   "sardine"
+  ]
+ },
+ {
+  "key": "skampi",
+  "name": "Škampi",
+  "name_en": "Shrimp",
+  "kcal": 85,
+  "protein": 20.0,
+  "carbs": 0.0,
+  "fat": 0.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "skampi",
+   "skampa",
+   "kozice",
+   "kozica",
+   "gambori",
+   "gambora",
+   "ociscenih skampi"
+  ]
+ },
+ {
+  "key": "ovsene-pahuljice",
+  "name": "Ovsene pahuljice",
+  "name_en": "Oats",
+  "kcal": 379,
+  "protein": 13.2,
+  "carbs": 67.7,
+  "fat": 6.5,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 10,
+   "cup": 90
+  },
+  "aliases": [
+   "ovsene pahuljice",
+   "ovsenih pahuljica",
+   "ovsene",
+   "ovsenih",
+   "samlevenih ovsenih",
+   "samlevene ovsene",
+   "ovsena kasa",
+   "zobene pahuljice",
+   "ovseno brasno"
+  ]
+ },
+ {
+  "key": "ovsene-mekinje",
+  "name": "Ovsene mekinje",
+  "name_en": "Oat bran",
+  "kcal": 246,
+  "protein": 17.0,
+  "carbs": 50.0,
+  "fat": 7.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 10
+  },
+  "aliases": [
+   "ovsene mekinje",
+   "ovsenih mekinja",
+   "mekinje"
+  ]
+ },
+ {
+  "key": "pirinac",
+  "name": "Pirinač",
+  "name_en": "White rice (dry)",
+  "kcal": 360,
+  "protein": 7.1,
+  "carbs": 79.0,
+  "fat": 0.7,
+  "base_unit": "g",
+  "units": {
+   "cup": 185
+  },
+  "aliases": [
+   "pirinac",
+   "pirinca",
+   "pirincem",
+   "beli pirinac"
+  ]
+ },
+ {
+  "key": "basmati-pirinac",
+  "name": "Basmati pirinač",
+  "name_en": "Basmati rice (dry)",
+  "kcal": 355,
+  "protein": 8.0,
+  "carbs": 78.0,
+  "fat": 0.8,
+  "base_unit": "g",
+  "units": {
+   "cup": 185
+  },
+  "aliases": [
+   "basmati pirinac",
+   "basmati pirinca",
+   "basmati"
+  ]
+ },
+ {
+  "key": "pirincani-griz",
+  "name": "Pirinčani griz",
+  "name_en": "Rice semolina",
+  "kcal": 360,
+  "protein": 7.0,
+  "carbs": 79.0,
+  "fat": 1.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12
+  },
+  "aliases": [
+   "pirincani griz",
+   "pirincanog griza",
+   "pirincani"
+  ]
+ },
+ {
+  "key": "griz",
+  "name": "Griz",
+  "name_en": "Semolina",
+  "kcal": 360,
+  "protein": 12.0,
+  "carbs": 73.0,
+  "fat": 1.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12
+  },
+  "aliases": [
+   "griz",
+   "griza"
+  ]
+ },
+ {
+  "key": "palenta",
+  "name": "Palenta",
+  "name_en": "Polenta (dry)",
+  "kcal": 360,
+  "protein": 8.1,
+  "carbs": 73.0,
+  "fat": 1.5,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12
+  },
+  "aliases": [
+   "palenta",
+   "palente",
+   "kukuruzni griz"
+  ]
+ },
+ {
+  "key": "testenina",
+  "name": "Testenina",
+  "name_en": "Pasta (dry)",
+  "kcal": 360,
+  "protein": 12.5,
+  "carbs": 71.0,
+  "fat": 1.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "testenina",
+   "testenine",
+   "testeninom",
+   "makaroni",
+   "makarone",
+   "spageti",
+   "penne",
+   "taljatele",
+   "taljatela",
+   "fusili",
+   "pasta"
+  ]
+ },
+ {
+  "key": "integralna-testenina",
+  "name": "Integralna testenina",
+  "name_en": "Whole-wheat pasta (dry)",
+  "kcal": 340,
+  "protein": 13.5,
+  "carbs": 64.0,
+  "fat": 2.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "integralna testenina",
+   "integralne testenine",
+   "integralnu testeninu"
+  ]
+ },
+ {
+  "key": "specle",
+  "name": "Špecle",
+  "name_en": "Spaetzle",
+  "kcal": 368,
+  "protein": 13.0,
+  "carbs": 70.0,
+  "fat": 3.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "specle",
+   "specli",
+   "spetzle"
+  ]
+ },
+ {
+  "key": "njoke",
+  "name": "Njoke",
+  "name_en": "Gnocchi",
+  "kcal": 160,
+  "protein": 3.5,
+  "carbs": 33.0,
+  "fat": 0.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "njoke",
+   "njoka",
+   "njokama",
+   "njoki"
+  ]
+ },
+ {
+  "key": "heljdine-kore",
+  "name": "Heljdine kore",
+  "name_en": "Buckwheat filo sheets",
+  "kcal": 270,
+  "protein": 8.0,
+  "carbs": 53.0,
+  "fat": 2.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "heljdine kore",
+   "heljdinih kora",
+   "kore za pitu",
+   "kore",
+   "kora"
+  ]
+ },
+ {
+  "key": "tost-hleb",
+  "name": "Tost hleb",
+  "name_en": "Toast bread",
+  "kcal": 265,
+  "protein": 8.5,
+  "carbs": 48.0,
+  "fat": 3.5,
+  "base_unit": "g",
+  "units": {
+   "slice": 25
+  },
+  "aliases": [
+   "tost hleb",
+   "tost hleba",
+   "tost",
+   "tosta",
+   "parceta tost hleba",
+   "kriske tost hleba"
+  ]
+ },
+ {
+  "key": "hleb",
+  "name": "Hleb",
+  "name_en": "White bread",
+  "kcal": 265,
+  "protein": 8.0,
+  "carbs": 50.0,
+  "fat": 2.5,
+  "base_unit": "g",
+  "units": {
+   "slice": 30
+  },
+  "aliases": [
+   "hleb",
+   "hleba",
+   "beli hleb",
+   "polubeli hleb",
+   "vekna"
+  ]
+ },
+ {
+  "key": "integralni-hleb",
+  "name": "Integralni hleb",
+  "name_en": "Whole-grain bread",
+  "kcal": 245,
+  "protein": 9.0,
+  "carbs": 42.0,
+  "fat": 3.5,
+  "base_unit": "g",
+  "units": {
+   "slice": 35
+  },
+  "aliases": [
+   "integralni hleb",
+   "integralnog hleba",
+   "crni hleb",
+   "razani hleb"
+  ]
+ },
+ {
+  "key": "wasa-hleb",
+  "name": "Wasa hleb",
+  "name_en": "Crispbread",
+  "kcal": 335,
+  "protein": 11.0,
+  "carbs": 65.0,
+  "fat": 1.5,
+  "base_unit": "g",
+  "units": {
+   "slice": 10,
+   "piece": 10
+  },
+  "aliases": [
+   "wasa hleba",
+   "wasa hleb",
+   "wasa",
+   "vasa hleba",
+   "krisbred",
+   "hrskavi hleb"
+  ]
+ },
+ {
+  "key": "kajzerica",
+  "name": "Kajzerica",
+  "name_en": "Kaiser roll",
+  "kcal": 285,
+  "protein": 9.0,
+  "carbs": 52.0,
+  "fat": 3.5,
+  "base_unit": "g",
+  "units": {
+   "piece": 55
+  },
+  "aliases": [
+   "kajzerica",
+   "kajzerice",
+   "burger kajzerica",
+   "zemicka",
+   "zemicke",
+   "lepinja"
+  ]
+ },
+ {
+  "key": "tortilja",
+  "name": "Tortilja",
+  "name_en": "Wheat tortilla",
+  "kcal": 310,
+  "protein": 8.0,
+  "carbs": 50.0,
+  "fat": 7.5,
+  "base_unit": "g",
+  "units": {
+   "piece": 45
+  },
+  "aliases": [
+   "tortilja",
+   "tortilje",
+   "tortilji",
+   "tortiljom",
+   "integralna tortilja",
+   "integralne tortilje",
+   "takos",
+   "takosi"
+  ]
+ },
+ {
+  "key": "proteinska-tortilja",
+  "name": "Proteinska tortilja",
+  "name_en": "Protein tortilla",
+  "kcal": 250,
+  "protein": 18.0,
+  "carbs": 28.0,
+  "fat": 6.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 50
+  },
+  "aliases": [
+   "proteinska tortilja",
+   "proteinske tortilje",
+   "proteinskih tortilja"
+  ]
+ },
+ {
+  "key": "kornfleks",
+  "name": "Kornfleks",
+  "name_en": "Corn flakes",
+  "kcal": 380,
+  "protein": 7.0,
+  "carbs": 84.0,
+  "fat": 1.0,
+  "base_unit": "g",
+  "units": {
+   "cup": 30
+  },
+  "aliases": [
+   "kornfleks",
+   "kornfleksa",
+   "kornfleksom",
+   "pahuljice od kukuruza"
+  ]
+ },
+ {
+  "key": "musli",
+  "name": "Musli",
+  "name_en": "Muesli",
+  "kcal": 380,
+  "protein": 10.0,
+  "carbs": 62.0,
+  "fat": 9.0,
+  "base_unit": "g",
+  "units": {
+   "cup": 85
+  },
+  "aliases": [
+   "musli",
+   "muslija",
+   "granola",
+   "granole"
+  ]
+ },
+ {
+  "key": "plazma",
+  "name": "Plazma",
+  "name_en": "Plazma biscuits",
+  "kcal": 440,
+  "protein": 8.0,
+  "carbs": 74.0,
+  "fat": 12.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12
+  },
+  "aliases": [
+   "plazma",
+   "plazme",
+   "plazmom",
+   "mlevena plazma"
+  ]
+ },
+ {
+  "key": "diet-plazma",
+  "name": "Diet plazma",
+  "name_en": "Diet Plazma biscuits",
+  "kcal": 400,
+  "protein": 9.0,
+  "carbs": 70.0,
+  "fat": 10.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12
+  },
+  "aliases": [
+   "diet plazma",
+   "diet mlevene plazme",
+   "diet mlevena plazma"
+  ]
+ },
+ {
+  "key": "integralno-brasno",
+  "name": "Integralno brašno",
+  "name_en": "Whole-wheat flour",
+  "kcal": 340,
+  "protein": 12.0,
+  "carbs": 64.0,
+  "fat": 2.0,
+  "base_unit": "g",
+  "units": {
+   "cup": 120,
+   "tbsp": 9
+  },
+  "aliases": [
+   "integralno brasno",
+   "integralnog brasna",
+   "integralnog",
+   "brasno",
+   "brasna",
+   "psenicno brasno"
+  ]
+ },
+ {
+  "key": "spelta-brasno",
+  "name": "Speltino brašno",
+  "name_en": "Spelt flour",
+  "kcal": 338,
+  "protein": 14.6,
+  "carbs": 60.0,
+  "fat": 2.4,
+  "base_unit": "g",
+  "units": {
+   "cup": 120,
+   "tbsp": 9
+  },
+  "aliases": [
+   "speltino brasno",
+   "speltinog brasna",
+   "spelta",
+   "spelte"
+  ]
+ },
+ {
+  "key": "razano-brasno",
+  "name": "Ražano brašno",
+  "name_en": "Rye flour",
+  "kcal": 335,
+  "protein": 10.0,
+  "carbs": 70.0,
+  "fat": 1.7,
+  "base_unit": "g",
+  "units": {
+   "cup": 120,
+   "tbsp": 9
+  },
+  "aliases": [
+   "razano brasno",
+   "razanog brasna",
+   "raz"
+  ]
+ },
+ {
+  "key": "kokosovo-brasno",
+  "name": "Kokosovo brašno",
+  "name_en": "Coconut flour",
+  "kcal": 380,
+  "protein": 18.0,
+  "carbs": 22.0,
+  "fat": 14.0,
+  "base_unit": "g",
+  "units": {
+   "cup": 110,
+   "tbsp": 8
+  },
+  "aliases": [
+   "kokosovo brasno",
+   "kokosovog brasna"
+  ]
+ },
+ {
+  "key": "bademovo-brasno",
+  "name": "Bademovo brašno",
+  "name_en": "Almond flour",
+  "kcal": 590,
+  "protein": 21.0,
+  "carbs": 6.0,
+  "fat": 52.0,
+  "base_unit": "g",
+  "units": {
+   "cup": 96,
+   "tbsp": 7
+  },
+  "aliases": [
+   "bademovo brasno",
+   "bademovog brasna"
+  ]
+ },
+ {
+  "key": "krompir",
+  "name": "Krompir",
+  "name_en": "Potato",
+  "kcal": 77,
+  "protein": 2.0,
+  "carbs": 17.0,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 150
+  },
+  "aliases": [
+   "krompir",
+   "krompira",
+   "krompirom",
+   "mladi krompir",
+   "mladog krompira",
+   "pire",
+   "pirea od krompira"
+  ]
+ },
+ {
+  "key": "batat",
+  "name": "Batat",
+  "name_en": "Sweet potato",
+  "kcal": 86,
+  "protein": 1.6,
+  "carbs": 20.0,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 150
+  },
+  "aliases": [
+   "batat",
+   "batata",
+   "slatki krompir"
+  ]
+ },
+ {
+  "key": "pomfrit",
+  "name": "Pomfrit",
+  "name_en": "French fries (frozen)",
+  "kcal": 150,
+  "protein": 2.5,
+  "carbs": 22.0,
+  "fat": 5.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "pomfrit",
+   "pomfrita",
+   "pomfritom",
+   "pommes"
+  ]
+ },
+ {
+  "key": "paradajz",
+  "name": "Paradajz",
+  "name_en": "Tomato",
+  "kcal": 18,
+  "protein": 0.9,
+  "carbs": 3.9,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 120,
+   "handful": 80
+  },
+  "aliases": [
+   "paradajz",
+   "paradajza",
+   "paradajzom"
+  ]
+ },
+ {
+  "key": "ceri-paradajz",
+  "name": "Čeri paradajz",
+  "name_en": "Cherry tomato",
+  "kcal": 18,
+  "protein": 0.9,
+  "carbs": 3.9,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 15,
+   "handful": 80
+  },
+  "aliases": [
+   "ceri paradajz",
+   "ceri paradajza",
+   "cherry paradajz"
+  ]
+ },
+ {
+  "key": "paradajz-sos",
+  "name": "Paradajz sos",
+  "name_en": "Tomato sauce / passata",
+  "kcal": 32,
+  "protein": 1.4,
+  "carbs": 6.0,
+  "fat": 0.3,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.05,
+   "tbsp": 16
+  },
+  "aliases": [
+   "paradajz sos",
+   "paradajz sosa",
+   "pelat",
+   "pelata",
+   "pelati",
+   "mlevenog paradajza",
+   "mleveni paradajz",
+   "pasirani paradajz",
+   "sok od paradajza"
+  ]
+ },
+ {
+  "key": "paradajz-pire",
+  "name": "Paradajz pire",
+  "name_en": "Tomato paste",
+  "kcal": 82,
+  "protein": 4.3,
+  "carbs": 14.0,
+  "fat": 0.5,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.05,
+   "tbsp": 16
+  },
+  "aliases": [
+   "paradajz pire",
+   "paradajz pirea",
+   "paradajz pasta",
+   "koncentrat paradajza"
+  ]
+ },
+ {
+  "key": "krastavac",
+  "name": "Krastavac",
+  "name_en": "Cucumber",
+  "kcal": 15,
+  "protein": 0.7,
+  "carbs": 3.6,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 150
+  },
+  "aliases": [
+   "krastavac",
+   "krastavca",
+   "krastavci",
+   "krastavcem"
+  ]
+ },
+ {
+  "key": "kiseli-krastavac",
+  "name": "Kiseli krastavac",
+  "name_en": "Pickles",
+  "kcal": 12,
+  "protein": 0.6,
+  "carbs": 2.2,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 30
+  },
+  "aliases": [
+   "kiseli krastavac",
+   "kiselih krastavaca",
+   "kiseli krastavci",
+   "kornison",
+   "kornisoni"
+  ]
+ },
+ {
+  "key": "paprika",
+  "name": "Paprika",
+  "name_en": "Bell pepper",
+  "kcal": 31,
+  "protein": 1.0,
+  "carbs": 6.0,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "piece": 120,
+   "handful": 60
+  },
+  "aliases": [
+   "paprika",
+   "paprike",
+   "paprikom",
+   "crvena paprika",
+   "crvene paprike",
+   "babura"
+  ]
+ },
+ {
+  "key": "spanac",
+  "name": "Spanać",
+  "name_en": "Spinach",
+  "kcal": 23,
+  "protein": 2.9,
+  "carbs": 1.4,
+  "fat": 0.4,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "spanac",
+   "spanaca",
+   "spanacem",
+   "baby spanac",
+   "baby spanaca",
+   "spanaca u briketima",
+   "smrznuti spanac"
+  ]
+ },
+ {
+  "key": "blitva",
+  "name": "Blitva",
+  "name_en": "Swiss chard",
+  "kcal": 25,
+  "protein": 2.5,
+  "carbs": 2.0,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "piece": 30,
+   "handful": 40
+  },
+  "aliases": [
+   "blitva",
+   "blitve",
+   "briketa smrznute blitve",
+   "smrznute blitve"
+  ]
+ },
+ {
+  "key": "salata",
+  "name": "Zelena salata",
+  "name_en": "Lettuce",
+  "kcal": 15,
+  "protein": 1.0,
+  "carbs": 2.9,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "zelena salata",
+   "salata",
+   "salate",
+   "salatu",
+   "iceberg salata",
+   "iceberg salate",
+   "iceberg",
+   "ajsberg"
+  ]
+ },
+ {
+  "key": "rukola",
+  "name": "Rukola",
+  "name_en": "Rocket",
+  "kcal": 25,
+  "protein": 2.6,
+  "carbs": 3.7,
+  "fat": 0.7,
+  "base_unit": "g",
+  "units": {
+   "handful": 20
+  },
+  "aliases": [
+   "rukola",
+   "rukole",
+   "rukolom"
+  ]
+ },
+ {
+  "key": "crni-luk",
+  "name": "Crni luk",
+  "name_en": "Onion",
+  "kcal": 40,
+  "protein": 1.1,
+  "carbs": 9.0,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 100
+  },
+  "aliases": [
+   "crni luk",
+   "crnog luka",
+   "luk",
+   "luka",
+   "lukom",
+   "glavica luka",
+   "glavica crnog luka",
+   "veliki luk",
+   "glavicu luka"
+  ]
+ },
+ {
+  "key": "crveni-luk",
+  "name": "Crveni luk",
+  "name_en": "Red onion",
+  "kcal": 40,
+  "protein": 1.1,
+  "carbs": 9.0,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 100
+  },
+  "aliases": [
+   "crveni luk",
+   "crvenog luka",
+   "crveni luka",
+   "glavica crvenog luka",
+   "ljubicasti luk"
+  ]
+ },
+ {
+  "key": "mladi-luk",
+  "name": "Mladi luk",
+  "name_en": "Spring onion",
+  "kcal": 32,
+  "protein": 1.8,
+  "carbs": 7.3,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 15
+  },
+  "aliases": [
+   "mladi luk",
+   "mladog luka",
+   "seckani mladi luk",
+   "praziluk"
+  ]
+ },
+ {
+  "key": "beli-luk",
+  "name": "Beli luk",
+  "name_en": "Garlic",
+  "kcal": 149,
+  "protein": 6.4,
+  "carbs": 33.0,
+  "fat": 0.5,
+  "base_unit": "g",
+  "units": {
+   "piece": 3
+  },
+  "aliases": [
+   "beli luk",
+   "belog luka",
+   "cen belog luka",
+   "cesnjak",
+   "seckani beli luk"
+  ]
+ },
+ {
+  "key": "sargarepa",
+  "name": "Šargarepa",
+  "name_en": "Carrot",
+  "kcal": 41,
+  "protein": 0.9,
+  "carbs": 9.6,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 80
+  },
+  "aliases": [
+   "sargarepa",
+   "sargarepe",
+   "sargarepu",
+   "mrkva",
+   "mrkve"
+  ]
+ },
+ {
+  "key": "brokoli",
+  "name": "Brokoli",
+  "name_en": "Broccoli",
+  "kcal": 34,
+  "protein": 2.8,
+  "carbs": 7.0,
+  "fat": 0.4,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "brokoli",
+   "brokolija",
+   "brokolijem"
+  ]
+ },
+ {
+  "key": "karfiol",
+  "name": "Karfiol",
+  "name_en": "Cauliflower",
+  "kcal": 25,
+  "protein": 1.9,
+  "carbs": 5.0,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "karfiol",
+   "karfiola"
+  ]
+ },
+ {
+  "key": "pecurke",
+  "name": "Pečurke",
+  "name_en": "Mushrooms",
+  "kcal": 22,
+  "protein": 3.1,
+  "carbs": 3.3,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "pecurke",
+   "pecuraka",
+   "pecurki",
+   "sampinjoni",
+   "sampinjona",
+   "gljive",
+   "gljiva"
+  ]
+ },
+ {
+  "key": "tikvice",
+  "name": "Tikvice",
+  "name_en": "Zucchini",
+  "kcal": 17,
+  "protein": 1.2,
+  "carbs": 3.1,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "piece": 200
+  },
+  "aliases": [
+   "tikvice",
+   "tikvica",
+   "tikvicama",
+   "rendanih tikvica",
+   "rendane tikvice"
+  ]
+ },
+ {
+  "key": "bundeva",
+  "name": "Bundeva",
+  "name_en": "Pumpkin",
+  "kcal": 26,
+  "protein": 1.0,
+  "carbs": 6.5,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "bundeva",
+   "bundeve"
+  ]
+ },
+ {
+  "key": "kukuruz-secerac",
+  "name": "Kukuruz šećerac",
+  "name_en": "Sweet corn (canned)",
+  "kcal": 86,
+  "protein": 3.2,
+  "carbs": 17.0,
+  "fat": 1.2,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15
+  },
+  "aliases": [
+   "kukuruz secerac",
+   "kukuruza secerca",
+   "kukuruz",
+   "kukuruza",
+   "secerac"
+  ]
+ },
+ {
+  "key": "crveni-pasulj",
+  "name": "Crveni pasulj",
+  "name_en": "Red kidney beans (canned)",
+  "kcal": 100,
+  "protein": 7.0,
+  "carbs": 13.0,
+  "fat": 0.5,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "crveni pasulj",
+   "crvenog pasulja",
+   "pasulj",
+   "pasulja",
+   "kidney"
+  ]
+ },
+ {
+  "key": "leblebija",
+  "name": "Leblebija",
+  "name_en": "Chickpeas (canned)",
+  "kcal": 120,
+  "protein": 7.0,
+  "carbs": 17.0,
+  "fat": 2.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "leblebija",
+   "leblebije",
+   "slanutak",
+   "naut"
+  ]
+ },
+ {
+  "key": "socivo",
+  "name": "Sočivo",
+  "name_en": "Lentils (dry)",
+  "kcal": 350,
+  "protein": 25.0,
+  "carbs": 50.0,
+  "fat": 1.1,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "socivo",
+   "sociva"
+  ]
+ },
+ {
+  "key": "grasak",
+  "name": "Grašak",
+  "name_en": "Peas",
+  "kcal": 81,
+  "protein": 5.4,
+  "carbs": 11.0,
+  "fat": 0.4,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "grasak",
+   "graska"
+  ]
+ },
+ {
+  "key": "smrznuto-povrce",
+  "name": "Smrznuto povrće",
+  "name_en": "Frozen vegetable mix",
+  "kcal": 50,
+  "protein": 2.5,
+  "carbs": 8.0,
+  "fat": 0.4,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "smrznuto povrce",
+   "smrznutog povrca",
+   "mesavine smrznutog povrca",
+   "povrce",
+   "povrca",
+   "smrznuti mix"
+  ]
+ },
+ {
+  "key": "kupus",
+  "name": "Kupus",
+  "name_en": "Cabbage",
+  "kcal": 25,
+  "protein": 1.3,
+  "carbs": 5.8,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "kupus",
+   "kupusa"
+  ]
+ },
+ {
+  "key": "cvekla",
+  "name": "Cvekla",
+  "name_en": "Beetroot",
+  "kcal": 43,
+  "protein": 1.6,
+  "carbs": 9.6,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "cvekla",
+   "cvekle"
+  ]
+ },
+ {
+  "key": "avokado",
+  "name": "Avokado",
+  "name_en": "Avocado",
+  "kcal": 160,
+  "protein": 2.0,
+  "carbs": 2.0,
+  "fat": 15.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 150
+  },
+  "aliases": [
+   "avokado",
+   "avokada"
+  ]
+ },
+ {
+  "key": "banana",
+  "name": "Banana",
+  "name_en": "Banana",
+  "kcal": 89,
+  "protein": 1.1,
+  "carbs": 22.8,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "piece": 120
+  },
+  "aliases": [
+   "banana",
+   "banane",
+   "bananu",
+   "banani",
+   "zrele banane",
+   "zamrznuta banana",
+   "male banane"
+  ]
+ },
+ {
+  "key": "jabuka",
+  "name": "Jabuka",
+  "name_en": "Apple",
+  "kcal": 52,
+  "protein": 0.3,
+  "carbs": 14.0,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "piece": 180
+  },
+  "aliases": [
+   "jabuka",
+   "jabuke",
+   "jabuku"
+  ]
+ },
+ {
+  "key": "kruska",
+  "name": "Kruška",
+  "name_en": "Pear",
+  "kcal": 57,
+  "protein": 0.4,
+  "carbs": 15.0,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 180
+  },
+  "aliases": [
+   "kruska",
+   "kruske"
+  ]
+ },
+ {
+  "key": "pomorandza",
+  "name": "Pomorandža",
+  "name_en": "Orange",
+  "kcal": 47,
+  "protein": 0.9,
+  "carbs": 12.0,
+  "fat": 0.1,
+  "base_unit": "g",
+  "units": {
+   "piece": 180
+  },
+  "aliases": [
+   "pomorandza",
+   "pomorandze",
+   "mandarina",
+   "mandarine"
+  ]
+ },
+ {
+  "key": "borovnica",
+  "name": "Borovnice",
+  "name_en": "Blueberries",
+  "kcal": 57,
+  "protein": 0.7,
+  "carbs": 14.5,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "handful": 40
+  },
+  "aliases": [
+   "borovnica",
+   "borovnice",
+   "borovnicama",
+   "borovnicu"
+  ]
+ },
+ {
+  "key": "malina",
+  "name": "Maline",
+  "name_en": "Raspberries",
+  "kcal": 52,
+  "protein": 1.2,
+  "carbs": 11.9,
+  "fat": 0.7,
+  "base_unit": "g",
+  "units": {
+   "handful": 40
+  },
+  "aliases": [
+   "malina",
+   "maline",
+   "malinama",
+   "smrznutih malina",
+   "smrznute maline"
+  ]
+ },
+ {
+  "key": "kupina",
+  "name": "Kupine",
+  "name_en": "Blackberries",
+  "kcal": 43,
+  "protein": 1.4,
+  "carbs": 9.6,
+  "fat": 0.5,
+  "base_unit": "g",
+  "units": {
+   "handful": 40
+  },
+  "aliases": [
+   "kupina",
+   "kupine",
+   "kupinama"
+  ]
+ },
+ {
+  "key": "jagoda",
+  "name": "Jagode",
+  "name_en": "Strawberries",
+  "kcal": 33,
+  "protein": 0.7,
+  "carbs": 7.7,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "handful": 50
+  },
+  "aliases": [
+   "jagoda",
+   "jagode",
+   "jagodama"
+  ]
+ },
+ {
+  "key": "visnja",
+  "name": "Višnje",
+  "name_en": "Sour cherries",
+  "kcal": 50,
+  "protein": 1.0,
+  "carbs": 12.0,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "handful": 40
+  },
+  "aliases": [
+   "visnja",
+   "visnje",
+   "visanja",
+   "tresnje",
+   "tresanja"
+  ]
+ },
+ {
+  "key": "sumsko-voce",
+  "name": "Šumsko voće",
+  "name_en": "Mixed berries",
+  "kcal": 50,
+  "protein": 1.0,
+  "carbs": 10.0,
+  "fat": 0.4,
+  "base_unit": "g",
+  "units": {
+   "handful": 40
+  },
+  "aliases": [
+   "sumsko voce",
+   "sumskog voca",
+   "mesano bobicasto voce"
+  ]
+ },
+ {
+  "key": "voce",
+  "name": "Voće",
+  "name_en": "Fruit (mixed)",
+  "kcal": 55,
+  "protein": 0.8,
+  "carbs": 13.0,
+  "fat": 0.3,
+  "base_unit": "g",
+  "units": {
+   "piece": 120,
+   "handful": 50
+  },
+  "aliases": [
+   "voce po izboru",
+   "voce",
+   "voca",
+   "nekog drugog voca",
+   "drugog voca"
+  ]
+ },
+ {
+  "key": "grozdje",
+  "name": "Grožđe",
+  "name_en": "Grapes",
+  "kcal": 69,
+  "protein": 0.7,
+  "carbs": 18.0,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "handful": 50
+  },
+  "aliases": [
+   "grozdje",
+   "grozdja"
+  ]
+ },
+ {
+  "key": "lubenica",
+  "name": "Lubenica",
+  "name_en": "Watermelon",
+  "kcal": 30,
+  "protein": 0.6,
+  "carbs": 7.6,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "lubenica",
+   "lubenice"
+  ]
+ },
+ {
+  "key": "urma",
+  "name": "Urme",
+  "name_en": "Dates",
+  "kcal": 282,
+  "protein": 2.5,
+  "carbs": 75.0,
+  "fat": 0.4,
+  "base_unit": "g",
+  "units": {
+   "piece": 8
+  },
+  "aliases": [
+   "urma",
+   "urme",
+   "urmi",
+   "urmama",
+   "datulja",
+   "datulje"
+  ]
+ },
+ {
+  "key": "suvo-grozdje",
+  "name": "Suvo grožđe",
+  "name_en": "Raisins",
+  "kcal": 299,
+  "protein": 3.1,
+  "carbs": 79.0,
+  "fat": 0.5,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12,
+   "handful": 30
+  },
+  "aliases": [
+   "suvo grozdje",
+   "suvog grozdja",
+   "grozdice"
+  ]
+ },
+ {
+  "key": "kikiriki-puter",
+  "name": "Kikiriki puter",
+  "name_en": "Peanut butter",
+  "kcal": 588,
+  "protein": 25.0,
+  "carbs": 20.0,
+  "fat": 50.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 16,
+   "tsp": 6
+  },
+  "aliases": [
+   "kikiriki puter",
+   "kikiriki putera",
+   "kikiriki puterom",
+   "puter od kikirikija",
+   "kikiriki-puter"
+  ]
+ },
+ {
+  "key": "kikiriki",
+  "name": "Kikiriki",
+  "name_en": "Peanuts",
+  "kcal": 567,
+  "protein": 26.0,
+  "carbs": 16.0,
+  "fat": 49.0,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "kikiriki",
+   "kikirikija",
+   "kikirikijem"
+  ]
+ },
+ {
+  "key": "badem",
+  "name": "Badem",
+  "name_en": "Almonds",
+  "kcal": 579,
+  "protein": 21.0,
+  "carbs": 22.0,
+  "fat": 50.0,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "badem",
+   "badema",
+   "bademi",
+   "bademom",
+   "badem listici",
+   "badem listica"
+  ]
+ },
+ {
+  "key": "orah",
+  "name": "Orah",
+  "name_en": "Walnuts",
+  "kcal": 654,
+  "protein": 15.0,
+  "carbs": 14.0,
+  "fat": 65.0,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "orah",
+   "oraha",
+   "orasi",
+   "orasa"
+  ]
+ },
+ {
+  "key": "lesnik",
+  "name": "Lešnik",
+  "name_en": "Hazelnuts",
+  "kcal": 628,
+  "protein": 15.0,
+  "carbs": 17.0,
+  "fat": 61.0,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "lesnik",
+   "lesnika",
+   "lesnici"
+  ]
+ },
+ {
+  "key": "indijski-orah",
+  "name": "Indijski orah",
+  "name_en": "Cashews",
+  "kcal": 553,
+  "protein": 18.0,
+  "carbs": 30.0,
+  "fat": 44.0,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "indijski orah",
+   "indijskog oraha",
+   "kesu"
+  ]
+ },
+ {
+  "key": "susam",
+  "name": "Susam",
+  "name_en": "Sesame seeds",
+  "kcal": 573,
+  "protein": 17.0,
+  "carbs": 23.0,
+  "fat": 50.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 9
+  },
+  "aliases": [
+   "susam",
+   "susama",
+   "susamom"
+  ]
+ },
+ {
+  "key": "cia",
+  "name": "Čia semenke",
+  "name_en": "Chia seeds",
+  "kcal": 486,
+  "protein": 17.0,
+  "carbs": 42.0,
+  "fat": 31.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12
+  },
+  "aliases": [
+   "cia semenke",
+   "cia semenki",
+   "cia semena",
+   "cia",
+   "chia"
+  ]
+ },
+ {
+  "key": "lan",
+  "name": "Laneno seme",
+  "name_en": "Flaxseed",
+  "kcal": 534,
+  "protein": 18.0,
+  "carbs": 29.0,
+  "fat": 42.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 10
+  },
+  "aliases": [
+   "laneno seme",
+   "mlevenog lana",
+   "mleveni lan",
+   "lan",
+   "lana"
+  ]
+ },
+ {
+  "key": "semenke-bundeve",
+  "name": "Semenke bundeve",
+  "name_en": "Pumpkin seeds",
+  "kcal": 559,
+  "protein": 30.0,
+  "carbs": 11.0,
+  "fat": 49.0,
+  "base_unit": "g",
+  "units": {
+   "handful": 30
+  },
+  "aliases": [
+   "semenke bundeve",
+   "bundevine semenke",
+   "kostice bundeve"
+  ]
+ },
+ {
+  "key": "kokos-listici",
+  "name": "Kokos listići",
+  "name_en": "Coconut flakes",
+  "kcal": 660,
+  "protein": 7.0,
+  "carbs": 15.0,
+  "fat": 65.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 6
+  },
+  "aliases": [
+   "kokos listici",
+   "kokosa listici",
+   "kokos",
+   "kokosovo brasno listici",
+   "kokosove listice"
+  ]
+ },
+ {
+  "key": "maslinovo-ulje",
+  "name": "Maslinovo ulje",
+  "name_en": "Olive oil",
+  "kcal": 884,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 100.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 10,
+   "tsp": 5,
+   "ml": 0.92
+  },
+  "aliases": [
+   "maslinovo ulje",
+   "maslinovog ulja",
+   "maslinovim uljem"
+  ]
+ },
+ {
+  "key": "ulje",
+  "name": "Ulje",
+  "name_en": "Sunflower oil",
+  "kcal": 884,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 100.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 10,
+   "tsp": 5,
+   "ml": 0.92
+  },
+  "aliases": [
+   "suncokretovo ulje",
+   "ulje",
+   "ulja",
+   "uljem"
+  ]
+ },
+ {
+  "key": "kokosovo-ulje",
+  "name": "Kokosovo ulje",
+  "name_en": "Coconut oil",
+  "kcal": 892,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 99.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12,
+   "tsp": 5,
+   "ml": 0.92
+  },
+  "aliases": [
+   "kokosovo ulje",
+   "kokosovog ulja"
+  ]
+ },
+ {
+  "key": "majonez",
+  "name": "Majonez",
+  "name_en": "Mayonnaise",
+  "kcal": 680,
+  "protein": 1.0,
+  "carbs": 2.0,
+  "fat": 75.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 14,
+   "ml": 0.95
+  },
+  "aliases": [
+   "majonez",
+   "majoneza",
+   "majonezom"
+  ]
+ },
+ {
+  "key": "kecap",
+  "name": "Kečap",
+  "name_en": "Ketchup",
+  "kcal": 100,
+  "protein": 1.5,
+  "carbs": 23.0,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15,
+   "ml": 1.1
+  },
+  "aliases": [
+   "kecap",
+   "kecapa",
+   "kecapom",
+   "kecap i senf",
+   "kecap i origano"
+  ]
+ },
+ {
+  "key": "senf",
+  "name": "Senf",
+  "name_en": "Mustard",
+  "kcal": 66,
+  "protein": 4.4,
+  "carbs": 5.0,
+  "fat": 3.3,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15,
+   "ml": 1.1
+  },
+  "aliases": [
+   "senf",
+   "senfa",
+   "senfom"
+  ]
+ },
+ {
+  "key": "tartar-sos",
+  "name": "Tartar sos",
+  "name_en": "Tartar sauce",
+  "kcal": 400,
+  "protein": 1.0,
+  "carbs": 5.0,
+  "fat": 42.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15
+  },
+  "aliases": [
+   "tartar sos",
+   "tartar sosa",
+   "tartar",
+   "tartara"
+  ]
+ },
+ {
+  "key": "soja-sos",
+  "name": "Soja sos",
+  "name_en": "Soy sauce",
+  "kcal": 60,
+  "protein": 8.0,
+  "carbs": 5.0,
+  "fat": 0.1,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.1,
+   "tbsp": 16
+  },
+  "aliases": [
+   "soja sos",
+   "soja sosa",
+   "sojin sos",
+   "soj sos"
+  ]
+ },
+ {
+  "key": "limunov-sok",
+  "name": "Limunov sok",
+  "name_en": "Lemon juice",
+  "kcal": 22,
+  "protein": 0.4,
+  "carbs": 6.9,
+  "fat": 0.2,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "tbsp": 15,
+   "tsp": 5
+  },
+  "aliases": [
+   "limunov sok",
+   "limunovog soka",
+   "limun",
+   "limuna",
+   "sok od limuna"
+  ]
+ },
+ {
+  "key": "crna-cokolada",
+  "name": "Crna čokolada 75%",
+  "name_en": "Dark chocolate 75%",
+  "kcal": 580,
+  "protein": 9.5,
+  "carbs": 29.0,
+  "fat": 42.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "crna cokolada",
+   "crne cokolade",
+   "crnu cokoladu",
+   "tamna cokolada",
+   "cokolade 75",
+   "cokolade sa 75",
+   "cokolada 75",
+   "cokolade 75% kakaa",
+   "crne cokolade 75"
+  ]
+ },
+ {
+  "key": "cokolada",
+  "name": "Čokolada",
+  "name_en": "Chocolate",
+  "kcal": 535,
+  "protein": 7.5,
+  "carbs": 58.0,
+  "fat": 30.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "cokolada",
+   "cokolade",
+   "cokoladom",
+   "cokoladu",
+   "mlecna cokolada"
+  ]
+ },
+ {
+  "key": "crna-cokolada-stevija",
+  "name": "Crna čokolada sa stevijom",
+  "name_en": "Stevia dark chocolate",
+  "kcal": 470,
+  "protein": 9.0,
+  "carbs": 30.0,
+  "fat": 38.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "crne cokolade zasladjene",
+   "crna cokolada zasladjena",
+   "crnu cokoladu zasladjenu"
+  ]
+ },
+ {
+  "key": "bela-cokolada-stevija",
+  "name": "Bela čokolada sa stevijom",
+  "name_en": "Stevia white chocolate",
+  "kcal": 420,
+  "protein": 8.0,
+  "carbs": 40.0,
+  "fat": 33.0,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "bela cokolada zasladjena",
+   "bele cokolade zasladjene",
+   "bela cokolada",
+   "bele cokolade"
+  ]
+ },
+ {
+  "key": "kakao",
+  "name": "Kakao",
+  "name_en": "Cocoa powder",
+  "kcal": 290,
+  "protein": 20.0,
+  "carbs": 14.0,
+  "fat": 18.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 6,
+   "tsp": 2.5
+  },
+  "aliases": [
+   "kakao",
+   "kakaa",
+   "kakaom",
+   "kakao prah"
+  ]
+ },
+ {
+  "key": "nutela",
+  "name": "Krem od lešnika",
+  "name_en": "Hazelnut spread",
+  "kcal": 539,
+  "protein": 6.3,
+  "carbs": 57.0,
+  "fat": 31.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 20
+  },
+  "aliases": [
+   "nutela",
+   "nutele",
+   "krem od lesnika",
+   "eurokrem"
+  ]
+ },
+ {
+  "key": "med",
+  "name": "Med",
+  "name_en": "Honey",
+  "kcal": 304,
+  "protein": 0.3,
+  "carbs": 82.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 21,
+   "tsp": 7
+  },
+  "aliases": [
+   "med",
+   "meda",
+   "medom"
+  ]
+ },
+ {
+  "key": "sirup-od-agave",
+  "name": "Sirup od agave",
+  "name_en": "Agave syrup",
+  "kcal": 310,
+  "protein": 0.1,
+  "carbs": 76.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 20,
+   "tsp": 7,
+   "ml": 1.4
+  },
+  "aliases": [
+   "sirup od agave",
+   "agavin sirup",
+   "agava"
+  ]
+ },
+ {
+  "key": "sirup-bez-secera",
+  "name": "Sirup bez šećera",
+  "name_en": "Sugar-free syrup",
+  "kcal": 35,
+  "protein": 0.0,
+  "carbs": 8.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 15,
+   "ml": 1.2
+  },
+  "aliases": [
+   "sirup bez secera",
+   "preliv bez secera",
+   "cokoladni zero preliv",
+   "zero preliv",
+   "sirup/preliv bez secera",
+   "preliv"
+  ]
+ },
+ {
+  "key": "secer",
+  "name": "Šećer",
+  "name_en": "Sugar",
+  "kcal": 400,
+  "protein": 0.0,
+  "carbs": 100.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12,
+   "tsp": 4
+  },
+  "aliases": [
+   "secer",
+   "secera",
+   "seceru",
+   "kristal secer"
+  ]
+ },
+ {
+  "key": "vanilin-secer",
+  "name": "Vanilin šećer",
+  "name_en": "Vanilla sugar",
+  "kcal": 395,
+  "protein": 0.0,
+  "carbs": 99.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 10,
+   "tsp": 4
+  },
+  "aliases": [
+   "vanilin secer",
+   "vanilinog secera",
+   "vanil secer"
+  ]
+ },
+ {
+  "key": "eritritol",
+  "name": "Eritritol",
+  "name_en": "Erythritol",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 12,
+   "tsp": 4
+  },
+  "aliases": [
+   "eritritol",
+   "eritritola",
+   "zaslađivac",
+   "zasladjivac"
+  ]
+ },
+ {
+  "key": "stevija",
+  "name": "Stevija",
+  "name_en": "Stevia",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tsp": 1
+  },
+  "aliases": [
+   "stevija",
+   "stevijom",
+   "stevije"
+  ]
+ },
+ {
+  "key": "dzem-bez-secera",
+  "name": "Džem bez šećera",
+  "name_en": "Sugar-free jam",
+  "kcal": 100,
+  "protein": 0.5,
+  "carbs": 20.0,
+  "fat": 0.2,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 20
+  },
+  "aliases": [
+   "dzem bez secera",
+   "dzem",
+   "dzema",
+   "marmelada"
+  ]
+ },
+ {
+  "key": "whey",
+  "name": "Whey protein",
+  "name_en": "Whey protein",
+  "kcal": 380,
+  "protein": 78.0,
+  "carbs": 8.0,
+  "fat": 5.0,
+  "base_unit": "g",
+  "units": {
+   "scoop": 30
+  },
+  "aliases": [
+   "whey protein",
+   "whey proteina",
+   "whey",
+   "protein",
+   "proteina",
+   "proteinski prah",
+   "whey proteina od cokolade",
+   "whey proteina od vanile",
+   "surutka"
+  ]
+ },
+ {
+  "key": "kazein",
+  "name": "Kazein",
+  "name_en": "Casein protein",
+  "kcal": 365,
+  "protein": 75.0,
+  "carbs": 8.0,
+  "fat": 3.0,
+  "base_unit": "g",
+  "units": {
+   "scoop": 30
+  },
+  "aliases": [
+   "kazein",
+   "kazeina",
+   "casein"
+  ]
+ },
+ {
+  "key": "kreatin",
+  "name": "Kreatin",
+  "name_en": "Creatine",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "scoop": 5,
+   "tsp": 5
+  },
+  "aliases": [
+   "kreatin",
+   "kreatina",
+   "creatine",
+   "kreatin monohidrat"
+  ]
+ },
+ {
+  "key": "bcaa",
+  "name": "BCAA",
+  "name_en": "BCAA",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "scoop": 10
+  },
+  "aliases": [
+   "bcaa",
+   "aminokiseline"
+  ]
+ },
+ {
+  "key": "protein-bar",
+  "name": "Protein bar",
+  "name_en": "Protein bar",
+  "kcal": 360,
+  "protein": 32.0,
+  "carbs": 38.0,
+  "fat": 10.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 60
+  },
+  "aliases": [
+   "protein bar",
+   "proteinska cokoladica",
+   "proteinski bar",
+   "bar"
+  ]
+ },
+ {
+  "key": "protein-puding",
+  "name": "Proteinski puding",
+  "name_en": "Protein pudding",
+  "kcal": 90,
+  "protein": 8.0,
+  "carbs": 11.0,
+  "fat": 1.3,
+  "base_unit": "g",
+  "units": {},
+  "aliases": [
+   "proteinski puding",
+   "proteinskog pudinga",
+   "protein puding",
+   "protein pudinga",
+   "zbregov proteinskog pudinga",
+   "protein pudinga od cokolade"
+  ]
+ },
+ {
+  "key": "zbregov-napitak",
+  "name": "Z bregov proteinski napitak",
+  "name_en": "Protein milk drink",
+  "kcal": 63,
+  "protein": 8.0,
+  "carbs": 6.0,
+  "fat": 0.8,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.03
+  },
+  "aliases": [
+   "zbregov napitak",
+   "zbregov proteinski napitak",
+   "zbregova",
+   "zbregov",
+   "z bregov",
+   "proteinsko mleko"
+  ]
+ },
+ {
+  "key": "so",
+  "name": "So",
+  "name_en": "Salt",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.5,
+   "tsp": 5
+  },
+  "aliases": [
+   "so",
+   "soli",
+   "malo soli",
+   "prstohvat soli",
+   "so i biber",
+   "morska so"
+  ]
+ },
+ {
+  "key": "biber",
+  "name": "Biber",
+  "name_en": "Black pepper",
+  "kcal": 251,
+  "protein": 10.0,
+  "carbs": 25.0,
+  "fat": 3.3,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.2,
+   "tsp": 2
+  },
+  "aliases": [
+   "biber",
+   "bibera",
+   "crni biber"
+  ]
+ },
+ {
+  "key": "zacini",
+  "name": "Začini",
+  "name_en": "Spices",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.5,
+   "tsp": 2
+  },
+  "aliases": [
+   "zacini",
+   "zacina",
+   "zacinima",
+   "zacin",
+   "so, biber",
+   "so, biber, origano, aleva paprika",
+   "so, biber, aleva paprika, beli luk, bosiljak",
+   "mesavina zacina"
+  ]
+ },
+ {
+  "key": "origano",
+  "name": "Origano",
+  "name_en": "Oregano",
+  "kcal": 265,
+  "protein": 9.0,
+  "carbs": 69.0,
+  "fat": 4.3,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.3,
+   "tsp": 1
+  },
+  "aliases": [
+   "origano",
+   "origana",
+   "so i origano",
+   "oregano"
+  ]
+ },
+ {
+  "key": "bosiljak",
+  "name": "Bosiljak",
+  "name_en": "Basil",
+  "kcal": 23,
+  "protein": 3.2,
+  "carbs": 2.6,
+  "fat": 0.6,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.3,
+   "tsp": 1
+  },
+  "aliases": [
+   "bosiljak",
+   "bosiljka"
+  ]
+ },
+ {
+  "key": "persun",
+  "name": "Peršun",
+  "name_en": "Parsley",
+  "kcal": 36,
+  "protein": 3.0,
+  "carbs": 6.3,
+  "fat": 0.8,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.5,
+   "tbsp": 4
+  },
+  "aliases": [
+   "persun",
+   "persuna",
+   "mirodjija",
+   "koper"
+  ]
+ },
+ {
+  "key": "aleva-paprika",
+  "name": "Aleva paprika",
+  "name_en": "Paprika powder",
+  "kcal": 282,
+  "protein": 14.0,
+  "carbs": 54.0,
+  "fat": 13.0,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.3,
+   "tsp": 2
+  },
+  "aliases": [
+   "aleva paprika",
+   "aleve paprike",
+   "dimljena paprika"
+  ]
+ },
+ {
+  "key": "cimet",
+  "name": "Cimet",
+  "name_en": "Cinnamon",
+  "kcal": 247,
+  "protein": 4.0,
+  "carbs": 81.0,
+  "fat": 1.2,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.5,
+   "tsp": 2.6
+  },
+  "aliases": [
+   "cimet",
+   "cimeta",
+   "cimetom"
+  ]
+ },
+ {
+  "key": "vegeta",
+  "name": "Vegeta",
+  "name_en": "Vegeta seasoning",
+  "kcal": 180,
+  "protein": 9.0,
+  "carbs": 35.0,
+  "fat": 1.0,
+  "base_unit": "g",
+  "units": {
+   "pinch": 0.5,
+   "tsp": 3
+  },
+  "aliases": [
+   "vegeta",
+   "vegete",
+   "zacin za jela"
+  ]
+ },
+ {
+  "key": "zacin-4-sira",
+  "name": "Začin 4 vrste sira",
+  "name_en": "Four-cheese seasoning mix",
+  "kcal": 340,
+  "protein": 12.0,
+  "carbs": 48.0,
+  "fat": 11.0,
+  "base_unit": "g",
+  "units": {
+   "tbsp": 10
+  },
+  "aliases": [
+   "zacina 4 vrste sira",
+   "zacin 4 vrste sira",
+   "4 vrste sira"
+  ]
+ },
+ {
+  "key": "prasak-za-pecivo",
+  "name": "Prašak za pecivo",
+  "name_en": "Baking powder",
+  "kcal": 90,
+  "protein": 0.0,
+  "carbs": 20.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "piece": 10,
+   "tsp": 4
+  },
+  "aliases": [
+   "prasak za pecivo",
+   "praska za pecivo",
+   "praskom za pecivo",
+   "baking powder"
+  ]
+ },
+ {
+  "key": "soda-bikarbona",
+  "name": "Soda bikarbona",
+  "name_en": "Baking soda",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tsp": 5
+  },
+  "aliases": [
+   "soda bikarbona",
+   "sode bikarbone",
+   "soda"
+  ]
+ },
+ {
+  "key": "aroma-vanile",
+  "name": "Aroma vanile",
+  "name_en": "Vanilla extract",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "g",
+  "units": {
+   "tsp": 4,
+   "pinch": 0.5
+  },
+  "aliases": [
+   "aroma vanile",
+   "arome vanile",
+   "vanila",
+   "vanile"
+  ]
+ },
+ {
+  "key": "voda",
+  "name": "Voda",
+  "name_en": "Water",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "cup": 250
+  },
+  "aliases": [
+   "voda",
+   "vode",
+   "vodom",
+   "mineralna voda"
+  ]
+ },
+ {
+  "key": "kafa",
+  "name": "Kafa",
+  "name_en": "Coffee",
+  "kcal": 2,
+  "protein": 0.1,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0,
+   "cup": 200
+  },
+  "aliases": [
+   "kafa",
+   "kafe",
+   "espreso",
+   "espresso"
+  ]
+ },
+ {
+  "key": "cola-zero",
+  "name": "Cola zero",
+  "name_en": "Diet cola",
+  "kcal": 0,
+  "protein": 0.0,
+  "carbs": 0.0,
+  "fat": 0.0,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0
+  },
+  "aliases": [
+   "cola zero",
+   "coca cola zero",
+   "kola zero",
+   "gazirani sok bez secera"
+  ]
+ },
+ {
+  "key": "pivo",
+  "name": "Pivo",
+  "name_en": "Beer",
+  "kcal": 43,
+  "protein": 0.5,
+  "carbs": 3.6,
+  "fat": 0.0,
+  "base_unit": "ml",
+  "units": {
+   "ml": 1.0
+  },
+  "aliases": [
+   "pivo",
+   "piva"
+  ]
+ }
+]

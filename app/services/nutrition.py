@@ -1,0 +1,343 @@
+"""
+Turning what a person types into grams, and grams into macros.
+
+Two jobs. `resolve` reads one written amount — "50g ovsenih", "1 merica
+whey", "pola banane", "malo kikiriki putera" — into a food, a quantity and
+a unit, and then into grams. `macros` turns grams into kcal and the three
+macros using the food's per-100 g numbers. Serbian is written with
+diacritics people skip and nouns that change ending with the number, so
+matching is done on stripped, prefix-trimmed words rather than exact names.
+"""
+
+from __future__ import annotations
+
+import re
+import unicodedata
+from dataclasses import dataclass
+
+# Grams for a named unit when the food itself doesn't say. Deliberately
+# modest: an unweighed spoon is the place to be conservative.
+DEFAULT_UNIT_GRAMS: dict[str, float] = {
+    "g": 1.0,
+    "ml": 1.0,
+    "piece": 100.0,
+    "scoop": 30.0,
+    "tbsp": 15.0,
+    "tsp": 5.0,
+    "cup": 240.0,
+    "handful": 30.0,
+    "pinch": 1.0,
+    "slice": 30.0,
+}
+
+# How the same unit is written in Serbian (and how people actually type it)
+UNIT_WORDS: dict[str, str] = {
+    "g": "g",
+    "gr": "g",
+    "gram": "g",
+    "grama": "g",
+    "grami": "g",
+    "g.": "g",
+    "kg": "kg",
+    "ml": "ml",
+    "mililitara": "ml",
+    "mil": "ml",
+    "l": "l",
+    "litar": "l",
+    "litara": "l",
+    "kom": "piece",
+    "komad": "piece",
+    "komada": "piece",
+    "kome": "piece",
+    "merica": "scoop",
+    "merice": "scoop",
+    "merici": "scoop",
+    "mericu": "scoop",
+    "scoop": "scoop",
+    "skup": "scoop",
+    "kasika": "tbsp",
+    "kasike": "tbsp",
+    "kasiku": "tbsp",
+    "kasicu": "tbsp",
+    "supena": "tbsp",
+    "kasicica": "tsp",
+    "kasicice": "tsp",
+    "kasicicu": "tsp",
+    "saka": "handful",
+    "sake": "handful",
+    "saku": "handful",
+    "sacica": "handful",
+    "prstohvat": "pinch",
+    "prstohvata": "pinch",
+    "kriska": "slice",
+    "kriske": "slice",
+    "krisku": "slice",
+    "parce": "slice",
+    "solja": "cup",
+    "solje": "cup",
+    "solju": "cup",
+    "caša": "cup",
+    "casa": "cup",
+    "porcija": "serving",
+    "porcije": "serving",
+}
+
+# Words that stand in for a number
+WORD_QUANTITY: dict[str, float] = {
+    "jedan": 1,
+    "jedna": 1,
+    "jedno": 1,
+    "jednu": 1,
+    "dva": 2,
+    "dve": 2,
+    "dvije": 2,
+    "tri": 3,
+    "cetiri": 4,
+    "pet": 5,
+    "sest": 6,
+    "sedam": 7,
+    "osam": 8,
+    "devet": 9,
+    "deset": 10,
+    "pola": 0.5,
+    "polovina": 0.5,
+    "pol": 0.5,
+    "par": 2,
+    "nekoliko": 3,
+}
+# Vague amounts: a small helping of whatever it is
+VAGUE = {"malo": 0.5, "kap": 0.25, "prstohvat": 1, "po zelji": 0.5, "po ukusu": 0.5}
+
+FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
+
+SPLIT = re.compile(r"[\n,;+]|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
+NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*(?:/\s*(\d+))?")
+
+
+def strip_accents(text: str) -> str:
+    """ "Kašičica" and "kasicica" are the same word to anyone typing fast."""
+    text = text.replace("đ", "dj").replace("Đ", "DJ")
+    return "".join(
+        ch for ch in unicodedata.normalize("NFD", text) if unicodedata.category(ch) != "Mn"
+    )
+
+
+def normalize(text: str | None) -> str:
+    return re.sub(r"\s+", " ", strip_accents(text or "").lower()).strip()
+
+
+def stem(word: str) -> str:
+    """Serbian endings change with the number and the case; the first five
+    letters do not ("ovsene", "ovsenih", "ovsenim")."""
+    return word[:5]
+
+
+def key_of(name: str, aliases: list[str] | None = None) -> str:
+    """The searchable text stored on a food: its names and every alias."""
+    parts = [normalize(name)] + [normalize(alias) for alias in (aliases or [])]
+    return " | ".join(dict.fromkeys(part for part in parts if part))
+
+
+@dataclass
+class FoodLike:
+    """What `resolve` needs of a food — the ORM row or a plain seed dict."""
+
+    id: object
+    name: str
+    search_key: str
+    units: dict | None
+    base_unit: str = "g"
+    kcal: float = 0
+    protein: float = 0
+    carbs: float = 0
+    fat: float = 0
+
+
+def grams_for(food: FoodLike | None, quantity: float, unit: str) -> float:
+    """How many grams (or millilitres) an amount comes to."""
+    unit = unit or "g"
+    if unit in ("g", "ml"):
+        return round(quantity, 2)
+    if unit == "kg":
+        return round(quantity * 1000, 2)
+    if unit == "l":
+        return round(quantity * 1000, 2)
+    per_unit = None
+    if food is not None and isinstance(food.units, dict):
+        value = food.units.get(unit)
+        if isinstance(value, int | float) and value > 0:
+            per_unit = float(value)
+    if per_unit is None:
+        per_unit = DEFAULT_UNIT_GRAMS.get(unit, 100.0)
+    return round(quantity * per_unit, 2)
+
+
+def macros(food: FoodLike | None, grams: float) -> dict[str, float]:
+    if food is None:
+        return {"kcal": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
+    share = (grams or 0) / 100
+    return {
+        "kcal": round(food.kcal * share, 1),
+        "protein": round(food.protein * share, 1),
+        "carbs": round(food.carbs * share, 1),
+        "fat": round(food.fat * share, 1),
+    }
+
+
+def total(items: list[dict[str, float]]) -> dict[str, float]:
+    out = {"kcal": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
+    for item in items:
+        for name in out:
+            out[name] += float(item.get(name) or 0)
+    return {name: round(value, 1) for name, value in out.items()}
+
+
+# --- Reading a written amount ------------------------------------------------
+
+
+@dataclass
+class Amount:
+    quantity: float
+    unit: str
+    # What is left after the number and the unit were taken off the front
+    name: str
+    vague: bool = False
+
+
+def read_amount(text: str) -> Amount:
+    """ "50g ovsenih" → 50 g ovsenih · "1 merica whey" → 1 scoop whey ·
+    "malo putera" → half a spoon of it · "banana" → one of them."""
+    rest = normalize(text).strip(" .-")
+    if not rest:
+        return Amount(0, "g", "")
+
+    vague = False
+    for word, share in VAGUE.items():
+        if rest.startswith(word + " "):
+            rest = rest[len(word) :].strip()
+            return Amount(share, "tbsp", rest, vague=True)
+
+    quantity: float | None = None
+    for symbol, value in FRACTIONS.items():
+        if rest.startswith(symbol):
+            quantity, rest = value, rest[len(symbol) :].strip()
+            break
+    if quantity is None:
+        match = NUMBER.match(rest)
+        if match:
+            quantity = float(match.group(1).replace(",", "."))
+            if match.group(2):  # "1/2"
+                divisor = float(match.group(2))
+                quantity = quantity / divisor if divisor else quantity
+            rest = rest[match.end() :].strip()
+    if quantity is None:
+        first = rest.split(" ")[0] if rest else ""
+        if first in WORD_QUANTITY:
+            quantity = WORD_QUANTITY[first]
+            rest = rest[len(first) :].strip()
+
+    unit = ""
+    if rest:
+        head = rest.split(" ")[0].strip(".")
+        mapped = UNIT_WORDS.get(head)
+        if mapped:
+            unit = mapped
+            rest = rest[len(rest.split(" ")[0]) :].strip()
+        else:
+            # "50g" written without a space
+            glued = re.match(r"^(g|gr|ml|kg|l)\b", head)
+            if glued and quantity is not None:
+                unit = UNIT_WORDS.get(glued.group(1), "g")
+                rest = rest[len(glued.group(1)) :].strip()
+    if quantity is None:
+        quantity = 1.0
+    if not unit:
+        unit = "piece" if quantity and quantity <= 12 else "g"
+    if unit == "serving":
+        unit = "piece"
+    rest = re.sub(r"^(od|sa|sa\s+|of)\s+", "", rest).strip(" ().")
+    return Amount(quantity, unit, rest, vague=vague)
+
+
+def match_food(name: str, foods: list[FoodLike]) -> FoodLike | None:
+    """The food whose name or aliases best cover the words written. Scored
+    on five-letter stems, so "ovsenih pahuljica" finds "ovsene pahuljice"."""
+    written = [word for word in re.findall(r"[a-z0-9]+", normalize(name)) if len(word) > 2]
+    wanted = [stem(word) for word in written]
+    if not wanted:
+        return None
+    spelled = set(written)
+    best, best_score = None, 0.0
+    for food in foods:
+        for alias in food.search_key.split("|"):
+            words = [word for word in re.findall(r"[a-z0-9]+", alias) if len(word) > 2]
+            tokens = [stem(word) for word in words]
+            if not tokens:
+                continue
+            hits = sum(1 for token in tokens if token in wanted)
+            if not hits:
+                continue
+            # A word spelled the way the food spells it beats one that only
+            # shares a five-letter stem — "secer" is sugar, "secerac" is the
+            # sweetcorn that otherwise ties with it and wins on table order
+            same = sum(1 for word in words if word in spelled)
+            # Every word of the alias matched is worth more than a long
+            # alias that only brushed the text
+            score = hits / len(tokens) + hits / max(len(wanted), 1) + 0.01 * hits + 0.02 * same
+            if score > best_score:
+                best, best_score = food, score
+    return best if best_score >= 1.0 else None
+
+
+@dataclass
+class Resolved:
+    label: str
+    quantity: float
+    unit: str
+    grams: float
+    food: FoodLike | None
+    raw: str
+
+    @property
+    def known(self) -> bool:
+        return self.food is not None
+
+
+def resolve(text: str, foods: list[FoodLike]) -> Resolved:
+    """One written line into an amount of a known food, where we can."""
+    amount = read_amount(text)
+    food = match_food(amount.name or text, foods)
+    unit = amount.unit
+    if food is not None:
+        known_units = food.units if isinstance(food.units, dict) else {}
+        if unit == "piece" and "piece" not in known_units:
+            # Nobody eats "one oats" — an uncounted staple means a helping
+            unit = "handful" if food.base_unit == "g" else "ml"
+        if unit == "tbsp" and amount.vague and "tbsp" not in known_units:
+            unit = "tbsp"
+    grams = grams_for(food, amount.quantity, unit)
+    label = food.name if food is not None else (amount.name or text.strip())
+    return Resolved(
+        label=label,
+        quantity=amount.quantity,
+        unit=unit,
+        grams=grams,
+        food=food,
+        raw=text.strip(),
+    )
+
+
+def split_text(text: str) -> list[str]:
+    """ "50g ovsenih, 1 merica whey i banana" → three things to look up."""
+    return [chunk.strip(" .-") for chunk in SPLIT.split(text or "") if chunk and chunk.strip(" .-")]
+
+
+def parse(text: str, foods: list[FoodLike]) -> tuple[list[Resolved], list[str]]:
+    found, unknown = [], []
+    for chunk in split_text(text):
+        item = resolve(chunk, foods)
+        if item.known:
+            found.append(item)
+        else:
+            unknown.append(chunk)
+    return found, unknown

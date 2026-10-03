@@ -1,0 +1,38 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: nutrijurnal
+    ports:
+      - "5437:5432"  # 5437 so it runs beside the other local stacks
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d nutrijurnal"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      # Inside the network the host is the service name, not localhost
+      DATABASE_URL: postgresql+asyncpg://app:app@db:5432/nutrijurnal
+    ports:
+      - "8004:8004"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/code/app  # hot reload during development
+      - uploads:/code/uploads  # avatars survive a container rebuild
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8004 --reload"
+
+volumes:
+  pgdata:
+  uploads:

@@ -1,0 +1,59 @@
+[project]
+name = "nutrijurnal"
+version = "0.1.0"
+description = "Nutrijurnal API — a public food diary: FastAPI, JWT auth, async Postgres"
+requires-python = ">=3.12"
+
+dependencies = [
+    "fastapi>=0.118",
+    "uvicorn[standard]>=0.38",
+    "pydantic[email]>=2.11",
+    "pydantic-settings>=2.11",
+    "sqlalchemy[asyncio]>=2.0.44",
+    "asyncpg>=0.30",
+    "alembic>=1.16",
+    "pyjwt>=2.10",
+    "pwdlib[argon2]>=0.2.1",
+    "authlib>=1.6",
+    "httpx>=0.28",
+    "itsdangerous>=2.2",
+    "python-multipart>=0.0.20",
+    "pillow>=11.3",
+    "pillow-heif>=0.18",
+    "reportlab>=4.2",
+    "zxing-cpp>=2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4",
+    "pytest-asyncio>=1.0",
+    "aiosqlite>=0.21",
+    "ruff>=0.14",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's Query/File in parameter defaults are the framework idiom, not a bug
+extend-immutable-calls = ["fastapi.Query", "fastapi.File", "fastapi.Depends"]
+
+[tool.ruff.lint.per-file-ignores]
+# Alembic writes these; reformatting them only makes the next autogenerate differ
+"alembic/versions/*" = ["E501", "I001"]
+
+[tool.ruff.format]
+# Same reason: a migration is kept the way Alembic wrote it, plus any review notes
+exclude = ["alembic/versions/*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.setuptools]
+packages = ["app"]
