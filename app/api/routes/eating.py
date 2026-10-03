@@ -1234,7 +1234,10 @@ async def export_days(
             media_type="text/csv; charset=utf-8",
             headers={"Content-Disposition": f'attachment; filename="{name}.csv"'},
         )
-    body = eating_report.build_pdf(
+    # A year of days laid out by reportlab takes a while; off the event loop it
+    # holds up nobody else's request
+    body = await asyncio.to_thread(
+        eating_report.build_pdf,
         days,
         who=(user.full_name or user.email.split("@")[0]),
         target=_target(user),
