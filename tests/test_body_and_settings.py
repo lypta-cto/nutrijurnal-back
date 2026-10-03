@@ -100,28 +100,24 @@ async def test_a_weighing_rounds_into_the_calculator_to_one_decimal(client: Asyn
     assert settings["profile"]["weight_kg"] == 68.5
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="WeightWrite takes 20–400 kg but GoalProfile only 30–350: the weighing is "
-    "copied onto the account, and profile_of() then fails validation on every read "
-    "of the settings (a 500 for Settings, onboarding and the export)",
-)
+@pytest.mark.parametrize("kg", [380, 25])
 async def test_a_weighing_outside_the_calculators_range_does_not_break_the_settings(
-    client: AsyncClient, me
+    client: AsyncClient, me, kg
 ):
+    """The scale takes 20–400 kg, the calculator 30–350: such a weighing is
+    kept as a weighing, and the calculator keeps the weight it had."""
     await client.patch(f"{PREFIX}/eating/settings", json={"profile": PROFILE}, headers=me)
-    await client.put(f"{PREFIX}/eating/weight/{DAY}", json={"kg": 380}, headers=me)
+    await client.put(f"{PREFIX}/eating/weight/{DAY}", json={"kg": kg}, headers=me)
 
     response = await client.get(f"{PREFIX}/eating/settings", headers=me)
 
     assert response.status_code == 200
+    assert response.json()["profile"]["weight_kg"] == 70
+    assert (await client.get(f"{PREFIX}/auth/me/export", headers=me)).status_code == 200
+    latest = await client.get(f"{PREFIX}/eating/weight/latest", headers=me)
+    assert latest.json()["kg"] == kg
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="remove_weight() never touches user.weight_kg: deleting a mistyped newest "
-    "weighing leaves it in the goal calculator's answers",
-)
 async def test_deleting_the_newest_weighing_hands_the_calculator_the_one_before(
     client: AsyncClient, me
 ):
@@ -134,6 +130,17 @@ async def test_deleting_the_newest_weighing_hands_the_calculator_the_one_before(
 
     settings = (await client.get(f"{PREFIX}/eating/settings", headers=me)).json()
     assert settings["profile"]["weight_kg"] == 69.8
+
+
+async def test_deleting_an_older_weighing_leaves_the_calculator_alone(client: AsyncClient, me):
+    await client.patch(f"{PREFIX}/eating/settings", json={"profile": PROFILE}, headers=me)
+    await client.put(f"{PREFIX}/eating/weight/2026-09-20", json={"kg": 71.2}, headers=me)
+    await client.put(f"{PREFIX}/eating/weight/{DAY}", json={"kg": 70.4}, headers=me)
+
+    await client.delete(f"{PREFIX}/eating/weight/2026-09-20", headers=me)
+
+    settings = (await client.get(f"{PREFIX}/eating/settings", headers=me)).json()
+    assert settings["profile"]["weight_kg"] == 70.4
 
 
 # --- Settings and the first run -------------------------------------------------------

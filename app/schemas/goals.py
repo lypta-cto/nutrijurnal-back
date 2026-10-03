@@ -12,12 +12,17 @@ Goal = Literal["lose", "maintain", "gain"]
 # Younger than this and a calorie target is a conversation for a doctor, not an app
 MIN_AGE = 13
 
+# The bodies the formulas were fitted on. A scale may read outside this (a
+# weighing takes 20–400 kg), but the calculator never starts from such a number.
+MIN_WEIGHT_KG = 30
+MAX_WEIGHT_KG = 350
+
 
 class GoalProfile(BaseModel):
     sex: Sex
     birth_year: int = Field(ge=1900)
     height_cm: float = Field(ge=100, le=250)
-    weight_kg: float = Field(ge=30, le=350)
+    weight_kg: float = Field(ge=MIN_WEIGHT_KG, le=MAX_WEIGHT_KG)
     activity: Activity = "light"
     goal: Goal = "maintain"
     # Kilograms a week. Ignored when maintaining; capped per goal by the

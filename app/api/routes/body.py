@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 from app.api.deps import CurrentUser, SessionDep
 from app.models.body import WaterEntry, WeightEntry
 from app.schemas.body import WaterDay, WaterTotal, WaterWrite, WeightRead, WeightWrite
+from app.services import goals
 
 router = APIRouter(prefix="/eating", tags=["water and weight"])
 
@@ -158,7 +159,8 @@ async def write_weight(
     day: date, payload: WeightWrite, session: SessionDep, user: CurrentUser
 ) -> WeightRead:
     """One number a day: weighing again the same day corrects it. The newest
-    weight is also the one the goal calculator starts from."""
+    weight is also the one the goal calculator starts from — when it is one
+    the calculator can take."""
     entry = (
         await session.execute(
             select(WeightEntry).where(WeightEntry.user_id == user.id, WeightEntry.day == day)
@@ -171,7 +173,7 @@ async def write_weight(
         entry.kg = payload.kg
     await session.flush()
     newest = await latest_weight(session, user)
-    if newest is not None and newest.day == day:
+    if newest is not None and newest.day == day and goals.fits_calculator(payload.kg):
         user.weight_kg = round(payload.kg, 1)
         await session.flush()
     return WeightRead.model_validate(entry)
@@ -188,3 +190,9 @@ async def remove_weight(day: date, session: SessionDep, user: CurrentUser) -> No
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No weight that day")
     await session.delete(entry)
     await session.flush()
+    # A mistyped newest weighing taken back must not stay in the calculator:
+    # it starts from the one before (or keeps what was typed into it, if none)
+    newest = await latest_weight(session, user)
+    if newest is not None and newest.day < day and goals.fits_calculator(newest.kg):
+        user.weight_kg = round(newest.kg, 1)
+        await session.flush()

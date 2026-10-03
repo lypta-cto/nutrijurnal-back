@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import date
 
-from app.schemas.goals import GoalEstimate, GoalProfile
+from app.schemas.goals import MAX_WEIGHT_KG, MIN_WEIGHT_KG, GoalEstimate, GoalProfile
 
 ACTIVITY_FACTORS: dict[str, float] = {
     "sedentary": 1.2,
@@ -89,15 +89,21 @@ def estimate(profile: GoalProfile, today: date | None = None) -> GoalEstimate:
     )
 
 
+def fits_calculator(kg: float) -> bool:
+    return MIN_WEIGHT_KG <= kg <= MAX_WEIGHT_KG
+
+
 def profile_of(user) -> GoalProfile | None:
-    """The answers kept on the account, or None while they were never given."""
+    """The answers kept on the account, or None while they were never given.
+    The weight is held inside the calculator's range: reading the settings
+    must never fail on a number the scale was allowed to store."""
     if not (user.sex and user.birth_year and user.height_cm and user.weight_kg):
         return None
     return GoalProfile(
         sex=user.sex,
         birth_year=user.birth_year,
         height_cm=user.height_cm,
-        weight_kg=user.weight_kg,
+        weight_kg=min(max(user.weight_kg, MIN_WEIGHT_KG), MAX_WEIGHT_KG),
         activity=user.activity or "light",
         goal=user.goal or "maintain",
         pace=user.goal_pace if user.goal_pace is not None else 0.5,
