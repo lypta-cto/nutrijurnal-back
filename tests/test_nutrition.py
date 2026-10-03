@@ -447,6 +447,32 @@ def test_a_number_at_the_end_without_a_unit_stays_in_the_name(written, name):
 @pytest.mark.parametrize(
     ("text", "rows"),
     [
+        # Hundreds said the way dictation writes them, in one word or two
+        ("sto grama piletine", [("Pileći file", "g", 100)]),
+        ("dvesta grama krompira", [("Krompir", "g", 200)]),
+        ("trista grama krompira", [("Krompir", "g", 300)]),
+        ("petsto ml vode", [("Voda", "ml", 500)]),
+        ("pet sto grama krompira", [("Krompir", "g", 500)]),
+        ("dvesta pedeset grama piletine", [("Pileći file", "g", 250)]),
+        ("dvadeset grama badema", [("Badem", "g", 20)]),
+        ("two hundred grams of rice", [("Pirinač", "g", 200)]),
+        ("a hundred grams of chicken", [("Pileći file", "g", 100)]),
+        # A quarter, and the other amounts said with an article
+        ("četvrt kile piletine", [("Pileći file", "g", 250)]),
+        ("a quarter of a litre of milk", [("Mleko 2.8%", "ml", 250)]),
+        ("a couple of eggs", [("Jaje", "piece", 110)]),
+    ],
+)
+async def test_numbers_said_in_words(client: AsyncClient, me, text, rows):
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
+
+
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
         # A plateful of a staple, not the 30 g handful "1 oats" is
         ("1 porcija pirinča", [("Pirinač", "g", 100)]),
         ("2 porcije testenine", [("Testenina", "g", 200)]),

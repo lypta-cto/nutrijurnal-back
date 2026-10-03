@@ -143,8 +143,10 @@ UNIT_WORDS: dict[str, str] = {
     "portions": "serving",
 }
 
-# Words that stand in for a number
-WORD_QUANTITY: dict[str, float] = {
+# Numbers said in words, the way dictation and a quick thumb write them.
+# Serbian builds a number by adding its words ("dvesta pedeset" is 250), and
+# a hundred said after a digit word multiplies it ("pet sto", "two hundred")
+CARDINALS: dict[str, float] = {
     "jedan": 1,
     "jedna": 1,
     "jedno": 1,
@@ -160,11 +162,37 @@ WORD_QUANTITY: dict[str, float] = {
     "osam": 8,
     "devet": 9,
     "deset": 10,
-    "pola": 0.5,
-    "polovina": 0.5,
-    "pol": 0.5,
-    "par": 2,
-    "nekoliko": 3,
+    "jedanaest": 11,
+    "dvanaest": 12,
+    "trinaest": 13,
+    "cetrnaest": 14,
+    "petnaest": 15,
+    "sesnaest": 16,
+    "sedamnaest": 17,
+    "osamnaest": 18,
+    "devetnaest": 19,
+    "dvadeset": 20,
+    "trideset": 30,
+    "cetrdeset": 40,
+    "pedeset": 50,
+    "sezdeset": 60,
+    "sedamdeset": 70,
+    "osamdeset": 80,
+    "devedeset": 90,
+    "sto": 100,
+    "stotinu": 100,
+    "dvesta": 200,
+    "dvjesto": 200,
+    "trista": 300,
+    "tristo": 300,
+    "cetiristo": 400,
+    "petsto": 500,
+    "sesto": 600,
+    "seststo": 600,
+    "sedamsto": 700,
+    "osamsto": 800,
+    "devetsto": 900,
+    "hiljadu": 1000,
     "one": 1,
     "two": 2,
     "three": 3,
@@ -175,12 +203,44 @@ WORD_QUANTITY: dict[str, float] = {
     "eight": 8,
     "nine": 9,
     "ten": 10,
+    "eleven": 11,
+    "twelve": 12,
+    "thirteen": 13,
+    "fourteen": 14,
+    "fifteen": 15,
+    "sixteen": 16,
+    "seventeen": 17,
+    "eighteen": 18,
+    "nineteen": 19,
+    "twenty": 20,
+    "thirty": 30,
+    "forty": 40,
+    "fifty": 50,
+    "sixty": 60,
+    "seventy": 70,
+    "eighty": 80,
+    "ninety": 90,
+    "hundred": 100,
+}
+# Words that stand for an amount on their own, never added to another
+WORD_QUANTITY: dict[str, float] = {
+    "pola": 0.5,
+    "polovina": 0.5,
+    "polovinu": 0.5,
+    "pol": 0.5,
+    "cetvrt": 0.25,
+    "cetvrtina": 0.25,
+    "cetvrtinu": 0.25,
+    "par": 2,
+    "nekoliko": 3,
     "half": 0.5,
+    "quarter": 0.25,
     "a": 1,
     "an": 1,
     "couple": 2,
     "few": 3,
 }
+_SAID_WITH_AN_ARTICLE = (CARDINALS.keys() | WORD_QUANTITY.keys()) - {"a", "an"}
 # Vague amounts: a small helping of whatever it is
 VAGUE = {
     "malo": 0.5,
@@ -320,6 +380,27 @@ def _number(written: str, divisor: str | None = None) -> float:
     return quantity
 
 
+def _said_amount(rest: str) -> tuple[float | None, str]:
+    """ "dvesta pedeset grama …" → 250 · "a quarter of a litre …" → 0.25 ·
+    "pola banane" → 0.5 — and what is left after the words taken."""
+    words = rest.split(" ")
+    # "a hundred", "a couple", "a quarter": the article belongs to the amount
+    if words[0] in ("a", "an") and len(words) > 1 and words[1] in _SAID_WITH_AN_ARTICLE:
+        words = words[1:]
+    total, taken = 0.0, 0
+    for word in words:
+        value = CARDINALS.get(word)
+        if value is None:
+            break
+        total = total * value if value == 100 and 0 < total < 10 else total + value
+        taken += 1
+    if taken:
+        return total, " ".join(words[taken:])
+    if words[0] in WORD_QUANTITY:
+        return WORD_QUANTITY[words[0]], " ".join(words[1:])
+    return None, rest
+
+
 def read_amount(text: str) -> Amount:
     """ "50g ovsenih" → 50 g ovsenih · "1 merica whey" → 1 scoop whey ·
     "malo putera" → half a spoon of it · "banana" → one of them ·
@@ -343,11 +424,8 @@ def read_amount(text: str) -> Amount:
         if match:
             quantity = _number(match.group(1), match.group(2))
             rest = rest[match.end() :].strip()
-    if quantity is None:
-        first = rest.split(" ")[0] if rest else ""
-        if first in WORD_QUANTITY:
-            quantity = WORD_QUANTITY[first]
-            rest = rest[len(first) :].strip()
+    if quantity is None and rest:
+        quantity, rest = _said_amount(rest)
 
     unit = ""
     if rest and quantity is not None:
