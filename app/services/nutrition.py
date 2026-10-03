@@ -100,6 +100,7 @@ UNIT_WORDS: dict[str, str] = {
     "casa": "cup",
     "porcija": "serving",
     "porcije": "serving",
+    "porciju": "serving",
     # The same, said in English
     "grams": "g",
     "kilo": "kg",
@@ -377,8 +378,6 @@ def read_amount(text: str) -> Amount:
         quantity = 1.0
     if not unit:
         unit = "piece" if quantity and quantity <= 12 else "g"
-    if unit == "serving":
-        unit = "piece"
     rest = re.sub(r"^(?:(?:od|sa|of|a|an|the)\s+)+", "", rest).strip(" ().")
     return Amount(quantity, unit, rest)
 
@@ -427,18 +426,29 @@ class Resolved:
         return self.food is not None
 
 
+# What "a portion" of a staple comes to: the 100 g helping an unknown unit is
+# everywhere else (grams_for), not the 30 g handful an uncounted "1 oats" is
+PORTION_GRAMS = 100.0
+
+
 def resolve(text: str, foods: list[FoodLike]) -> Resolved:
     """One written line into an amount of a known food, where we can."""
     amount = read_amount(text)
     food = match_food(amount.name or text, foods)
-    unit = amount.unit
-    if food is not None:
-        known_units = food.units if isinstance(food.units, dict) else {}
-        if unit == "piece" and "piece" not in known_units:
-            # Nobody eats "one oats" — an uncounted staple means a helping,
-            # and one of a drink ("1 jogurt", "1 pivo") is a glass of it
-            unit = "handful" if food.base_unit == "g" else "cup"
-    quantity, unit = in_base_units(amount.quantity, unit)
+    quantity, unit = amount.quantity, amount.unit
+    known_units = food.units if food is not None and isinstance(food.units, dict) else {}
+    if unit == "serving":
+        # A portion of rice or pasta is a plateful; of anything counted in
+        # pieces, or drunk, it is one of them like any other count
+        if food is not None and food.base_unit == "g" and "piece" not in known_units:
+            quantity, unit = round(quantity * PORTION_GRAMS, 2), "g"
+        else:
+            unit = "piece"
+    if food is not None and unit == "piece" and "piece" not in known_units:
+        # Nobody eats "one oats" — an uncounted staple means a helping,
+        # and one of a drink ("1 jogurt", "1 pivo") is a glass of it
+        unit = "handful" if food.base_unit == "g" else "cup"
+    quantity, unit = in_base_units(quantity, unit)
     grams = grams_for(food, quantity, unit)
     label = food.name if food is not None else (amount.name or text.strip())
     return Resolved(

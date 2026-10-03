@@ -53,7 +53,7 @@ def test_a_foods_search_key_holds_each_name_once():
         ("pola banane", 0.5, "piece", "banane"),
         ("½ banane", 0.5, "piece", "banane"),
         ("1/2 banane", 0.5, "piece", "banane"),
-        ("2 porcije", 2, "piece", ""),
+        ("2 porcije", 2, "serving", ""),
         ("banana", 1, "piece", "banana"),
         ("2 jaja", 2, "piece", "jaja"),
         # Past a dozen, a bare number is a weight, not a count
@@ -442,6 +442,25 @@ def test_a_number_at_the_end_without_a_unit_stays_in_the_name(written, name):
     amount = read_amount(written)
 
     assert (amount.quantity, amount.unit, amount.name) == (1, "piece", name)
+
+
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        # A plateful of a staple, not the 30 g handful "1 oats" is
+        ("1 porcija pirinča", [("Pirinač", "g", 100)]),
+        ("2 porcije testenine", [("Testenina", "g", 200)]),
+        ("a portion of pasta", [("Testenina", "g", 100)]),
+        # Of something counted in pieces, or drunk, one of them
+        ("porcija piletine", [("Pileći file", "piece", 150)]),
+        ("porciju jogurta", [("Jogurt", "cup", 250)]),
+    ],
+)
+async def test_a_portion_is_a_plateful(client: AsyncClient, me, text, rows):
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
 
 
 @pytest.mark.parametrize(
