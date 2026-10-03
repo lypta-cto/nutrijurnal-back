@@ -407,9 +407,16 @@ def split_text(text: str) -> list[str]:
     return [chunk.strip(" .-") for chunk in SPLIT.split(text or "") if chunk and chunk.strip(" .-")]
 
 
+# Every chunk is matched against every food a person can see; a meal of more
+# than this is a paste gone wrong, and the rest is handed back as written
+MAX_CHUNKS = 50
+
+
 def parse(text: str, foods: list[FoodLike]) -> tuple[list[Resolved], list[str]]:
     found, unknown = [], []
-    for chunk in split_text(text):
+    chunks = split_text(text)
+    unknown.extend(chunks[MAX_CHUNKS:])
+    for chunk in chunks[:MAX_CHUNKS]:
         item = resolve(chunk, foods)
         if item.known:
             found.append(item)

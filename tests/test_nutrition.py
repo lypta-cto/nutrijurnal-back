@@ -314,3 +314,12 @@ async def test_a_kilo_or_a_litre_posted_as_such_is_kept_at_its_weight(client: As
     )
     [line] = recipe.json()["items"]
     assert (line["quantity"], line["unit"], line["grams"]) == (1000, "ml", 1000)
+
+
+async def test_a_paste_of_more_than_fifty_things_reads_the_first_fifty(client: AsyncClient, me):
+    """Every piece is matched against every food a person can see, so a runaway
+    paste is capped — the rest comes back as written, nothing is lost."""
+    parsed = await _parse(client, me, ", ".join(["1 banana"] * 60))
+
+    assert len(parsed["items"]) == 50
+    assert parsed["unknown"] == ["1 banana"] * 10

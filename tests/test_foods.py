@@ -59,6 +59,8 @@ async def test_what_a_food_accepts_is_bounded(client: AsyncClient, me):
         "over 100 g protein per 100 g": {**base, "protein": 101},
         "negative fat": {**base, "fat": -0.1},
         "long barcode": {**base, "barcode": "1" * 33},
+        "too many aliases": {**base, "aliases": [f"alias {n}" for n in range(21)]},
+        "long alias": {**base, "aliases": ["x" * 121]},
     }.items():
         response = await client.post(f"{PREFIX}/eating/foods", json=body, headers=me)
         assert response.status_code == 422, case

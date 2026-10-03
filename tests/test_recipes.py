@@ -375,3 +375,22 @@ async def test_deleting_a_recipe_keeps_what_was_cooked_from_it(client: AsyncClie
     [kept] = day["meals"]
     assert (kept["id"], kept["recipe_id"], kept["recipe_title"]) == (cooked["id"], None, "Omlet")
     assert kept["kcal"] == 170.5
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"steps": ["Mix."] * 101},
+        {"steps": ["x" * 2001]},
+        {"note": "x" * 4001},
+    ],
+)
+async def test_what_a_recipe_holds_is_bounded(client: AsyncClient, me, body):
+    created = await client.post(
+        f"{PREFIX}/eating/recipes", json={"title": "Pita", **body}, headers=me
+    )
+    assert created.status_code == 422
+
+    recipe = await _recipe(client, me, title="Pita", steps=["Mix."] * 100, note="x" * 4000)
+    edited = await client.patch(f"{PREFIX}/eating/recipes/{recipe['id']}", json=body, headers=me)
+    assert edited.status_code == 422

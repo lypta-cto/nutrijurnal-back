@@ -928,7 +928,7 @@ async def attach_voice(
     session: SessionDep,
     user: CurrentUser,
     file: Annotated[UploadFile, File()],
-    seconds: Annotated[float | None, Form()] = None,
+    seconds: Annotated[float | None, Form(ge=0, le=3600)] = None,
     transcribed: Annotated[bool, Form()] = False,
 ) -> MealRead:
     """Hang the recording on the meal.

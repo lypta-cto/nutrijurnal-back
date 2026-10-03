@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import date, datetime, time
-from typing import Literal
+from typing import Annotated, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -11,6 +11,12 @@ from app.schemas.goals import GoalProfile
 
 # Where a meal sits in the day — the diary groups by it (services/slots.py)
 Slot = Literal["breakfast", "lunch", "dinner", "snack"]
+
+# Bounds on what a person can write into a public database: generous for any
+# real recipe, small enough that one request can't store a novel
+Step = Annotated[str, Field(max_length=2000)]
+Alias = Annotated[str, Field(max_length=120)]
+NOTE_MAX = 4000
 
 
 class Macros(BaseModel):
@@ -83,7 +89,7 @@ class FoodWrite(BaseModel):
     base_unit: str = "g"
     units: dict[str, float] = {}
     barcode: str | None = Field(default=None, max_length=32)
-    aliases: list[str] = []
+    aliases: list[Alias] = Field(default=[], max_length=20)
 
 
 class FoodPatch(BaseModel):
@@ -237,8 +243,8 @@ class RecipeWrite(BaseModel):
     # the ingredients can follow later, or never.
     stated: MacrosWrite | None = None
     minutes: int | None = Field(default=None, ge=0, le=600)
-    steps: list[str] = []
-    note: str | None = None
+    steps: list[Step] = Field(default=[], max_length=100)
+    note: str | None = Field(default=None, max_length=NOTE_MAX)
     items: list[RecipeItemWrite] = Field(default=[], max_length=100)
 
 
@@ -249,8 +255,8 @@ class RecipePatch(BaseModel):
     serving_unit: Literal["serving", "piece"] | None = None
     stated: MacrosWrite | None = None
     minutes: int | None = Field(default=None, ge=0, le=600)
-    steps: list[str] | None = None
-    note: str | None = None
+    steps: list[Step] | None = Field(default=None, max_length=100)
+    note: str | None = Field(default=None, max_length=NOTE_MAX)
     # Sent whole: this is how "five eggs, make it two" is saved
     items: list[RecipeItemWrite] | None = Field(default=None, max_length=100)
 

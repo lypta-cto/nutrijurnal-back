@@ -152,3 +152,9 @@ async def test_a_recording_needs_a_signed_in_owner(client: AsyncClient, lunch):
     assert (
         await client.post(path, files={"file": ("n", b"sound", "audio/ogg")})
     ).status_code == 401
+
+
+async def test_a_recordings_length_is_a_real_length(client: AsyncClient, me, lunch):
+    for seconds in ("-5", "86400"):
+        refused = await _send(client, me, lunch["id"], b"sound", "audio/ogg", seconds=seconds)
+        assert refused.status_code == 422, seconds
