@@ -48,6 +48,13 @@ from tests.helpers import SMALL_PANTRY  # noqa: E402
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
+def pytest_configure(config):
+    # SQLAlchemy warns about queries that mean something other than they say
+    # (a column-level DISTINCT, a relationship it will not load). The suite
+    # treats those as failures, so a query like that never ships quietly.
+    config.addinivalue_line("filterwarnings", "error::sqlalchemy.exc.SAWarning")
+
+
 @pytest.fixture
 async def engine():
     engine = create_async_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})

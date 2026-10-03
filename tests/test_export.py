@@ -3,6 +3,7 @@
 import csv
 import io
 import re
+import threading
 from datetime import date, timedelta
 
 import pytest
@@ -176,6 +177,25 @@ async def test_the_pdf_is_given_the_persons_name_target_and_days(
         (FIRST, ["Doručak", "Užina"], 810.0),
         (LAST, ["Večera"], 85.2),
     ]
+
+
+async def test_the_pdf_is_laid_out_off_the_event_loop(client: AsyncClient, me, diary, monkeypatch):
+    """A year of days takes reportlab a while; laid out on the event loop it
+    would hold up every other person's request until it was done."""
+    loop_thread = threading.current_thread()
+    laid_out_on = []
+    real_build_pdf = eating_report.build_pdf
+
+    def spy(days, **options):
+        laid_out_on.append(threading.current_thread())
+        return real_build_pdf(days, **options)
+
+    monkeypatch.setattr(eating_report, "build_pdf", spy)
+
+    response = await _export(client, me, FIRST, LAST)
+
+    assert response.status_code == 200
+    assert laid_out_on and laid_out_on[0] is not loop_thread
 
 
 async def test_the_period_must_run_forwards_and_stay_under_400_days(client: AsyncClient, me):

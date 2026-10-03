@@ -3,6 +3,7 @@ generated EAN-13 here, and Open Food Facts is the conftest's stand-in — no
 test reaches the network."""
 
 import io
+import threading
 
 import httpx
 import pytest
@@ -302,6 +303,28 @@ async def test_a_photo_claiming_a_vast_canvas_is_refused_before_decoding(
 
     assert response.status_code == 200
     assert response.json()["found"] is False
+
+
+async def test_a_photo_is_decoded_off_the_event_loop(
+    client: AsyncClient, me, open_food_facts, monkeypatch
+):
+    """Decoding a phone photo takes a while; on the event loop it would hold
+    up every other person's request until the bars were found."""
+    open_food_facts.products[EAN] = WHEY
+    loop_thread = threading.current_thread()
+    decoded_on = []
+    real_read_barcode = food_lookup.read_barcode
+
+    def spy(content):
+        decoded_on.append(threading.current_thread())
+        return real_read_barcode(content)
+
+    monkeypatch.setattr(food_lookup, "read_barcode", spy)
+
+    response = await _scan(client, me, photo_of(EAN))
+
+    assert response.json()["found"] is True
+    assert decoded_on and decoded_on[0] is not loop_thread
 
 
 async def test_a_photo_is_bounded_and_required(client: AsyncClient, me):

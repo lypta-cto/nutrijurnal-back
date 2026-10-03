@@ -1,4 +1,5 @@
 import io
+import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.models import Food, Meal, Recipe, RefreshToken, Role, User
+from app.services import media
 from tests.helpers import png_claiming
 
 PREFIX = settings.API_V1_PREFIX
@@ -593,6 +595,30 @@ async def test_an_avatar_is_re_encoded_and_replaces_the_last_one(
     removed = await client.delete(f"{PREFIX}/auth/me/avatar", headers=headers)
     assert removed.json()["avatar_url"] is None
     assert list((uploads / "avatars").iterdir()) == []
+
+
+async def test_an_avatar_is_encoded_off_the_event_loop(client: AsyncClient, monkeypatch):
+    """Re-encoding a photo is real work; on the event loop it would hold up
+    every other person's request while it ran."""
+    body = await register(client)
+    loop_thread = threading.current_thread()
+    encoded_on = []
+    real_encode = media._encode
+
+    def spy(raw):
+        encoded_on.append(threading.current_thread())
+        return real_encode(raw)
+
+    monkeypatch.setattr(media, "_encode", spy)
+
+    response = await client.post(
+        f"{PREFIX}/auth/me/avatar",
+        files={"file": ("me.png", _png(), "image/png")},
+        headers={"Authorization": f"Bearer {body['access_token']}"},
+    )
+
+    assert response.status_code == 200, response.text
+    assert encoded_on and encoded_on[0] is not loop_thread
 
 
 # --- Closing an account -------------------------------------------------------

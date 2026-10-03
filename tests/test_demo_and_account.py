@@ -4,15 +4,19 @@ on disk, and the export of an account with a calculator behind it."""
 
 import io
 import json
+import uuid
 from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
 from PIL import Image
+from sqlalchemy import event, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import ORMExecuteState, Session
 
 from app.api.routes import demo as demo_routes
 from app.core.config import settings
+from app.models import User
 from app.services import eating_seed, reminders
 from tests.helpers import PASSWORD, PREFIX, auth_headers, bearer
 
@@ -220,6 +224,40 @@ async def test_a_kept_demo_keeps_its_avatar_past_the_expiry(client: AsyncClient,
 
     assert len(list((uploads / "avatars").iterdir())) == 1
     assert (await client.get(f"{PREFIX}/auth/me", headers=headers)).status_code == 200
+
+
+async def test_a_demo_kept_as_the_tidy_reaches_it_is_kept(client: AsyncClient, uploads):
+    """Keeping a demo and sweeping the expired ones can cross. Whatever the
+    sweep looked at before, a claim that lands just ahead of its delete wins:
+    the account, its diary and its avatar all stay."""
+    kept, swept = await demo(client), await demo(client)
+    for headers in (kept, swept):
+        await client.post(
+            f"{PREFIX}/auth/me/avatar",
+            files={"file": ("me.png", png(), "image/png")},
+            headers=headers,
+        )
+    kept_id = uuid.UUID((await client.get(f"{PREFIX}/auth/me", headers=kept)).json()["id"])
+
+    def claim_lands_first(state: ORMExecuteState) -> None:
+        if state.is_delete and state.statement.table.name == User.__tablename__:
+            state.session.execute(
+                update(User)
+                .where(User.id == kept_id)
+                .values(is_demo=False, demo_expires_at=None)
+                .execution_options(synchronize_session=False)
+            )
+
+    event.listen(Session, "do_orm_execute", claim_lands_first)
+    try:
+        await reminders.tidy(datetime.now(UTC) + timedelta(days=settings.DEMO_TTL_DAYS + 1))
+    finally:
+        event.remove(Session, "do_orm_execute", claim_lands_first)
+
+    assert (await client.get(f"{PREFIX}/auth/me", headers=kept)).status_code == 200
+    assert (await client.get(f"{PREFIX}/auth/me", headers=swept)).status_code == 401
+    [avatar] = (uploads / "avatars").iterdir()
+    assert avatar.name.startswith(str(kept_id))
 
 
 # --- The export of an account with a calculator behind it -----------------------------------
