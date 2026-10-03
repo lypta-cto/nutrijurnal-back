@@ -256,8 +256,17 @@ VAGUE = {
 FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 
 # A comma between two digits is the Serbian decimal comma ("0,5 l mleka",
-# "31,25 g") and stays inside its amount; every other comma separates foods
-SPLIT = re.compile(r"[\n;+]|(?<!\d),|,(?!\d)|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
+# "31,25 g") and stays inside its amount; every other comma separates foods.
+# So does "i"/"and" — but not in "jedna i po banana" or "two and a half
+# eggs", which are one amount and a half
+SPLIT = re.compile(
+    r"[\n;+]|(?<!\d),|,(?!\d)"
+    r"|(?:\s+\bi\s+(?=\S)(?!po\b))|(?:\s+\band\s+(?=\S)(?!a\s+half\b))"
+)
+# The "i"/"and" kept before a half, for when no amount turns out to stand in
+# front of it ("hleb i po ukusu soli" is bread, and salt to taste)
+KEPT_BEFORE_A_HALF = re.compile(r"\s+(?:i(?=\s+po\b)|and(?=\s+a\s+half\b))\s+")
+AND_A_HALF = ("i po", "and a half")
 # A number followed by "%" is part of the name ("3,5% mleko"), not an amount
 NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)(?![\d.,]*\s*%)\s*(?:/\s*(\d+))?")
 # "1.000 g": a point or a comma with three digits after it, as a thousand
@@ -382,6 +391,14 @@ def _number(written: str, divisor: str | None = None) -> float:
     return quantity
 
 
+def _and_a_half(rest: str) -> tuple[float, str]:
+    """ "i po banana" → 0.5 and "banana"; anything else → 0 and as it was."""
+    for words in AND_A_HALF:
+        if rest == words or rest.startswith(words + " "):
+            return 0.5, rest[len(words) :].strip()
+    return 0, rest
+
+
 def _said_amount(rest: str) -> tuple[float | None, str]:
     """ "dvesta pedeset grama …" → 250 · "a quarter of a litre …" → 0.25 ·
     "pola banane" → 0.5 — and what is left after the words taken."""
@@ -430,6 +447,9 @@ def read_amount(text: str) -> Amount:
             rest = rest[match.end() :].strip()
     if quantity is None and rest:
         quantity, rest = _said_amount(rest)
+    if quantity is not None:
+        half, rest = _and_a_half(rest)
+        quantity += half
 
     unit = ""
     if rest and quantity is not None:
@@ -450,6 +470,11 @@ def read_amount(text: str) -> Amount:
             if glued and quantity is not None:
                 unit = UNIT_WORDS.get(glued.group(1), "g")
                 rest = rest[len(glued.group(1)) :].strip()
+    if unit:
+        # "kilo i po piletine": the half after the unit, of one of it
+        half, rest = _and_a_half(rest)
+        if half:
+            quantity = (quantity or 1) + half
     if quantity is None and not unit:
         trailing = TRAILING.search(rest)
         if trailing and trailing.group(3) in UNIT_WORDS:
@@ -547,9 +572,35 @@ def resolve(text: str, foods: list[FoodLike]) -> Resolved:
     )
 
 
+def _ends_in_an_amount(text: str) -> bool:
+    words = normalize(text).split(" ")
+    last = words[-1] if words else ""
+    return (
+        bool(re.fullmatch(r"\d+(?:[.,]\d+)?[a-z]*", last))
+        or last in CARDINALS
+        or last in WORD_QUANTITY
+        or last in UNIT_WORDS
+    )
+
+
+def _split_where_no_amount_is_halved(chunk: str) -> list[str]:
+    pieces, start = [], 0
+    for joiner in KEPT_BEFORE_A_HALF.finditer(chunk):
+        if not _ends_in_an_amount(chunk[: joiner.start()]):
+            pieces.append(chunk[start : joiner.start()])
+            start = joiner.end()
+    return [*pieces, chunk[start:]]
+
+
 def split_text(text: str) -> list[str]:
     """ "50g ovsenih, 1 merica whey i banana" → three things to look up."""
-    return [chunk.strip(" .-") for chunk in SPLIT.split(text or "") if chunk and chunk.strip(" .-")]
+    chunks = [
+        piece
+        for chunk in SPLIT.split(text or "")
+        if chunk
+        for piece in _split_where_no_amount_is_halved(chunk)
+    ]
+    return [chunk.strip(" .-") for chunk in chunks if chunk.strip(" .-")]
 
 
 # Every chunk is matched against every food a person can see; a meal of more

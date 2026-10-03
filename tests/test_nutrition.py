@@ -120,6 +120,13 @@ def test_grams_come_from_the_foods_own_units_first():
         ("2 jaja + 1 banana; kafa\nmed", ["2 jaja", "1 banana", "kafa", "med"]),
         # An "i" inside a word is not a separator
         ("pirinač integralni", ["pirinač integralni"]),
+        ("jaje i pomorandža", ["jaje", "pomorandža"]),
+        # Nor is the one in an amount and a half…
+        ("jedna i po banana", ["jedna i po banana"]),
+        ("kilo i po piletine i 2 jaja", ["kilo i po piletine", "2 jaja"]),
+        ("one and a half bananas and an egg", ["one and a half bananas", "an egg"]),
+        # …but with no amount in front of it, it is "and" again
+        ("hleb i po ukusu soli", ["hleb", "po ukusu soli"]),
         (" , ; ", []),
     ],
 )
@@ -473,6 +480,23 @@ def test_a_number_at_the_end_without_a_unit_stays_in_the_name(written, name):
     ],
 )
 async def test_numbers_said_in_words(client: AsyncClient, me, text, rows):
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
+
+
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        ("jedna i po banana", [("Banana", "piece", 180)]),
+        ("2 i po jajeta", [("Jaje", "piece", 137.5)]),
+        ("kilo i po piletine", [("Pileći file", "g", 1500)]),
+        ("2 i po dl mleka", [("Mleko 2.8%", "ml", 250)]),
+        ("one and a half bananas", [("Banana", "piece", 180)]),
+    ],
+)
+async def test_an_amount_and_a_half(client: AsyncClient, me, text, rows):
     parsed = await _parse(client, me, text)
 
     assert parsed["unknown"] == []
