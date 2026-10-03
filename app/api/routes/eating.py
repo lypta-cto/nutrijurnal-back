@@ -12,7 +12,7 @@ import uuid
 from datetime import UTC, date, datetime, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, File, Form, HTTPException, Path, Query, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy import func, or_, select, update
 
@@ -410,23 +410,14 @@ async def update_food(
     return _food_read(food, user.id, set(await _favourite_ids(session, user)))
 
 
-@router.post("/foods/scan", response_model=ScanOut)
-async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = File()) -> ScanOut:
-    """A photo of the barcode: read the digits, then ask Open Food Facts."""
-    content = await photo.read()
-    if len(content) > MAX_PHOTO_BYTES:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="That photo is over 12 MB",
-        )
-    barcode = food_lookup.read_barcode(content)
-    if barcode is None:
-        return ScanOut(found=False, message="No barcode in that photo — try filling the frame.")
-
+async def _food_for_barcode(session, user, barcode: str) -> ScanOut:
+    """The food behind a barcode: this person's own copy first, then a shared
+    one, then Open Food Facts — whose answer is kept as this person's food, so
+    the packet is only ever looked up once."""
     existing = (
         await session.execute(
             select(Food)
-            .where(Food.barcode == barcode, _visible_to(user))
+            .where(Food.barcode == barcode, _visible_to(user), Food.archived.is_(False))
             # Your own copy of a product wins over a shared one
             .order_by(Food.user_id.is_(None))
             .limit(1)
@@ -441,7 +432,7 @@ async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = 
         return ScanOut(
             found=False,
             barcode=barcode,
-            message="Not in Open Food Facts — add it once by hand and it stays.",
+            message="Not in Open Food Facts — add it once from the label and it stays.",
         )
     units = {}
     if product.serving_grams:
@@ -463,6 +454,33 @@ async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = 
     session.add(food)
     await session.flush()
     return ScanOut(found=True, barcode=barcode, food=_food_read(food, user.id, set()))
+
+
+@router.post("/foods/scan", response_model=ScanOut)
+async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = File()) -> ScanOut:
+    """A photo of the barcode, for phones whose camera the page cannot use
+    live: read the digits here, then look them up."""
+    content = await photo.read()
+    if len(content) > MAX_PHOTO_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="That photo is over 12 MB",
+        )
+    barcode = food_lookup.read_barcode(content)
+    if barcode is None:
+        return ScanOut(found=False, message="No barcode in that photo — try filling the frame.")
+    return await _food_for_barcode(session, user, barcode)
+
+
+@router.get("/foods/barcode/{barcode}", response_model=ScanOut)
+async def food_by_barcode(
+    session: SessionDep,
+    user: CurrentUser,
+    barcode: str = Path(pattern=r"^\d{6,14}$"),
+) -> ScanOut:
+    """The digits the live camera scanner read (or someone typed off the
+    packet): EAN-13, EAN-8, UPC-A/E or GTIN-14."""
+    return await _food_for_barcode(session, user, barcode)
 
 
 # --- Reading what was typed ---------------------------------------------------
