@@ -1243,6 +1243,8 @@ async def export_days(
         who=(user.full_name or user.email.split("@")[0]),
         target=_target(user),
         generated_at=datetime.now(UTC),
+        start=start,
+        end=end,
     )
     return Response(
         content=body,
