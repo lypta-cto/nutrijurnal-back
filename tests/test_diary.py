@@ -87,23 +87,14 @@ async def test_a_meal_can_be_renamed_moved_and_retimed(client: AsyncClient, me):
     assert [m["title"] for m in (await _day(client, me, "2026-09-20"))["meals"]] == ["Brunch"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/api/routes/eating.py update_meal(): MealPatch allows day=null and the handler "
-        "setattr()s it onto the NOT NULL column; the IntegrityError is caught by main.py's "
-        "DBAPIError handler and answered as 503 'Database unavailable. Is Postgres running?' "
-        "instead of a 422 (or leaving the day as it was)"
-    ),
-)
-async def test_a_meal_can_not_be_moved_to_no_day(client: AsyncClient, me):
+@pytest.mark.parametrize("body", [{"day": None}, {"slot": None}, {"day": None, "slot": None}])
+async def test_a_meal_can_not_be_moved_to_no_day_or_no_slot(client: AsyncClient, me, body):
     saved = await meal(client, me, DAY)
 
-    response = await client.patch(
-        f"{PREFIX}/eating/meals/{saved['id']}", json={"day": None}, headers=me
-    )
+    response = await client.patch(f"{PREFIX}/eating/meals/{saved['id']}", json=body, headers=me)
 
-    assert response.status_code in (200, 422), response.text
+    assert response.status_code == 200, response.text
+    assert (response.json()["day"], response.json()["slot"]) == (DAY, saved["slot"])
     assert [m["id"] for m in (await _day(client, me))["meals"]] == [saved["id"]]
 
 

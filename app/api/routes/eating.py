@@ -732,6 +732,9 @@ async def meal_from_recipe(payload: FromRecipe, session: SessionDep, user: Curre
     return _meal_read(meal)
 
 
+REQUIRED_MEAL_FIELDS = ("day", "slot", "title")
+
+
 @router.patch("/meals/{meal_id}", response_model=MealRead)
 async def update_meal(
     meal_id: uuid.UUID, payload: MealPatch, session: SessionDep, user: CurrentUser
@@ -739,7 +742,9 @@ async def update_meal(
     meal = await _own_meal(session, user, meal_id)
     fields = payload.model_dump(exclude_unset=True)
     for name, value in fields.items():
-        if name == "title" and not value:
+        # A meal always has a day, a slot and a name: a null for one of them
+        # leaves it as it was, the way a null title always has
+        if name in REQUIRED_MEAL_FIELDS and not value:
             continue
         setattr(meal, name, value)
     await session.flush()
