@@ -169,3 +169,21 @@ async def test_an_unknown_food_is_a_404(client: AsyncClient, me):
     assert (
         await client.patch(f"{PREFIX}/eating/foods/not-a-uuid", json={"kcal": 1}, headers=me)
     ).status_code == 422
+
+
+@pytest.mark.parametrize(
+    ("query", "first"),
+    [
+        ("chicken", "Pileći file"),
+        ("oats", "Ovsene pahuljice"),
+        ("chickpeas", "Leblebija"),
+    ],
+)
+async def test_a_whole_english_word_beats_one_that_only_shares_its_stem(
+    client: AsyncClient, pantry, query, first
+):
+    """ "chicken" and "chickpeas" share five letters, "oats" and "oat bran"
+    three — the food actually named what was typed comes first."""
+    headers = await auth_headers(client, email="ranking@example.com")
+
+    assert (await _names(client, headers, q=query))[0] == first

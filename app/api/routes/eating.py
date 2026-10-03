@@ -296,7 +296,8 @@ async def list_foods(
         foods = [food for food in foods if food.user_id == user.id]
     query = nutrition.normalize(q)
     if query:
-        wanted = [nutrition.stem(word) for word in query.split() if len(word) > 2]
+        asked = [word for word in query.split() if len(word) > 2]
+        wanted = [nutrition.stem(word) for word in asked]
         # Among equally good matches, what this person stars and eats comes first
         recent = {food_id: rank for rank, food_id in enumerate(await _recent_uses(session, user))}
         scored = []
@@ -305,8 +306,12 @@ async def list_foods(
             words = _SPLIT_WORDS.split(haystack)
             hits = sum(1 for want in wanted if any(_words_meet(word, want) for word in words))
             if hits or query in haystack:
+                # The whole word asked for ("chicken", "oats") beats a word
+                # that only shares its stem ("chickpeas", "oat bran")
+                whole = sum(1 for word in asked if any(name.startswith(word) for name in words))
                 rank = (
                     -hits,
+                    -whole,
                     food.id not in favourites,
                     recent.get(food.id, RECENT_ITEMS),
                     len(food.name),
