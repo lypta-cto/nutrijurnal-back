@@ -90,6 +90,15 @@ class User(UUIDMixin, TimestampMixin, Base):
     # in the person's own clock, not the server's
     timezone: Mapped[str | None] = mapped_column(String(64))
 
+    # --- Demo accounts ------------------------------------------------------------
+    # "Try the demo" makes a throwaway account with two weeks already in it.
+    # It is deleted, with everything in it, once it expires — unless the
+    # person keeps it by giving it an email and a password.
+    is_demo: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
+    demo_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",

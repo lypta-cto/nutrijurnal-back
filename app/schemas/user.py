@@ -41,6 +41,9 @@ class UserRead(UserBase):
     # Null until the first-run questions are answered — the frontend's cue
     # to open /onboarding before anything else
     onboarded_at: datetime | None = None
+    # A throwaway demo account, and when it is deleted
+    is_demo: bool = False
+    demo_expires_at: datetime | None = None
 
 
 class PasswordChange(BaseModel):

@@ -112,6 +112,15 @@ class Settings(BaseSettings):
     def push_enabled(self) -> bool:
         return bool(self.VAPID_PUBLIC_KEY and self.VAPID_PRIVATE_KEY)
 
+    # --- Demo accounts ---------------------------------------------------------
+    # "Try the demo" on the login screen. Each demo is deleted with everything
+    # in it after DEMO_TTL_DAYS (by the reminder loop), and one address may
+    # start only so many an hour, so the button cannot be used to fill the
+    # database.
+    DEMO_ENABLED: bool = True
+    DEMO_TTL_DAYS: int = 3
+    DEMO_PER_HOUR: int = 10
+
     # --- Operator account ----------------------------------------------------
     # Created by `python -m app.cli owner` — the one account that may use the
     # /users admin routes. Everyone else signs up through /auth/register.

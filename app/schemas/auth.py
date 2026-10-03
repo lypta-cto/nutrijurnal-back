@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.schemas.user import UserRead
@@ -45,3 +47,26 @@ class ProvidersRead(BaseModel):
 
     password: bool = True
     google: bool = False
+
+
+class DemoRequest(BaseModel):
+    """The viewer's own today, so the two weeks end on the day they are living
+    in rather than the server's."""
+
+    today: date | None = None
+
+
+class DemoClaim(BaseModel):
+    """Keeping a demo: the account becomes an ordinary one, diary and all."""
+
+    email: EmailStr
+    password: str = Field(min_length=8, max_length=128)
+    full_name: str = Field(min_length=1, max_length=255)
+
+    @field_validator("full_name")
+    @classmethod
+    def _a_name_is_more_than_spaces(cls, value: str) -> str:
+        name = value.strip()
+        if not name:
+            raise ValueError("Enter your name")
+        return name

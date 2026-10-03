@@ -30,7 +30,7 @@ from app.models.body import WaterEntry
 from app.models.eating import DeletedMeal, Meal, MealItem
 from app.models.push import PushSubscription, Reminder
 from app.models.user import User
-from app.services import push
+from app.services import media, push
 from app.services.slots import LABELS
 
 logger = logging.getLogger(__name__)
@@ -183,10 +183,24 @@ async def tick(now: datetime, sender: Sender = push.send) -> int:
 
 
 async def tidy(now: datetime) -> None:
-    """The daily housekeeping that rides on the same loop."""
+    """The housekeeping that rides on the same loop: meals deleted over a
+    day ago are gone for good, and so are expired demo accounts — with
+    everything in them, every user table cascades."""
     async with database.SessionLocal() as session:
         expired = now - DELETED_MEALS_KEEP
         await session.execute(delete(DeletedMeal).where(DeletedMeal.deleted_at < expired))
+        demos = list(
+            (
+                await session.execute(
+                    select(User.id).where(User.is_demo.is_(True), User.demo_expires_at < now)
+                )
+            ).scalars()
+        )
+        if demos:
+            for user_id in demos:
+                media.remove_previous(user_id)
+            await session.execute(delete(User).where(User.id.in_(demos)))
+            logger.info("Removed %s expired demo accounts", len(demos))
         await session.commit()
 
 
