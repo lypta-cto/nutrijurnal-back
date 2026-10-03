@@ -17,17 +17,20 @@ from fastapi.responses import Response
 from sqlalchemy import func, or_, select, update
 
 from app.api.deps import CurrentUser, SessionDep
-from app.models.eating import UNITS, Food, Meal, MealItem, Recipe, RecipeItem
+from app.models.eating import UNITS, FavouriteFood, Food, Meal, MealItem, Recipe, RecipeItem
 from app.schemas.eating import (
+    DayCopy,
     DayRead,
     DayTotals,
     FoodPatch,
+    FoodPick,
     FoodRead,
     FoodWrite,
     FromRecipe,
     ItemPatch,
     ItemWrite,
     Macros,
+    MealCopy,
     MealItemRead,
     MealPatch,
     MealRead,
@@ -35,6 +38,7 @@ from app.schemas.eating import (
     ParsedItem,
     ParseIn,
     ParseOut,
+    QuickFoods,
     RecipePatch,
     RecipeRead,
     RecipeWrite,
@@ -43,7 +47,7 @@ from app.schemas.eating import (
     SettingsRead,
 )
 from app.schemas.goals import GoalEstimate, GoalProfile
-from app.services import food_lookup, goals, nutrition
+from app.services import food_lookup, goals, nutrition, slots
 
 router = APIRouter(prefix="/eating", tags=["eating"])
 
@@ -94,10 +98,41 @@ async def _foods_for(session, user) -> list[Food]:
     return list(rows)
 
 
-def _food_read(food: Food, user_id: uuid.UUID) -> FoodRead:
+def _food_read(food: Food, user_id: uuid.UUID, favourites: set[uuid.UUID]) -> FoodRead:
     body = FoodRead.model_validate(food)
     body.mine = food.user_id == user_id
+    body.favourite = food.id in favourites
     return body
+
+
+async def _favourite_ids(session, user) -> list[uuid.UUID]:
+    """The foods this person starred, the latest first."""
+    rows = await session.execute(
+        select(FavouriteFood.food_id)
+        .where(FavouriteFood.user_id == user.id)
+        .order_by(FavouriteFood.created_at.desc())
+    )
+    return list(rows.scalars())
+
+
+# How far back "recent" looks: plenty for a dozen distinct foods, cheap to read
+RECENT_ITEMS = 300
+
+
+async def _recent_uses(session, user) -> dict[uuid.UUID, tuple[float, str, date]]:
+    """Each food this person ate lately, with the amount they last ate it in.
+    Ordered by recency — the dict keeps the order it was filled in."""
+    rows = await session.execute(
+        select(MealItem.food_id, MealItem.quantity, MealItem.unit, Meal.day)
+        .join(Meal, Meal.id == MealItem.meal_id)
+        .where(Meal.user_id == user.id, MealItem.food_id.is_not(None))
+        .order_by(Meal.day.desc(), Meal.created_at.desc(), MealItem.position.desc())
+        .limit(RECENT_ITEMS)
+    )
+    latest: dict[uuid.UUID, tuple[float, str, date]] = {}
+    for food_id, quantity, unit, day in rows:
+        latest.setdefault(food_id, (quantity, unit, day))
+    return latest
 
 
 def _meal_read(meal: Meal) -> MealRead:
@@ -119,6 +154,7 @@ def _meal_read(meal: Meal) -> MealRead:
         day=meal.day,
         at=meal.at,
         title=meal.title,
+        slot=meal.slot,
         recipe_id=meal.recipe_id,
         recipe_title=meal.recipe_title,
         servings=meal.servings,
@@ -238,23 +274,87 @@ async def list_foods(
     mine: bool = Query(default=False, description="Only the foods you added yourself"),
 ) -> list[FoodRead]:
     foods = await _foods_for(session, user)
+    favourites = set(await _favourite_ids(session, user))
     if mine:
         foods = [food for food in foods if food.user_id == user.id]
     query = nutrition.normalize(q)
     if query:
         wanted = [nutrition.stem(word) for word in query.split() if len(word) > 2]
+        # Among equally good matches, what this person stars and eats comes first
+        recent = {food_id: rank for rank, food_id in enumerate(await _recent_uses(session, user))}
         scored = []
         for food in foods:
             haystack = f"{food.search_key} {nutrition.normalize(food.brand)}"
             words = _SPLIT_WORDS.split(haystack)
             hits = sum(1 for want in wanted if any(_words_meet(word, want) for word in words))
             if hits or query in haystack:
-                scored.append((hits, -len(food.name), food))
-        scored.sort(key=lambda row: (-row[0], -row[1]))
-        foods = [row[2] for row in scored]
+                rank = (
+                    -hits,
+                    food.id not in favourites,
+                    recent.get(food.id, RECENT_ITEMS),
+                    len(food.name),
+                )
+                scored.append((rank, food))
+        scored.sort(key=lambda row: row[0])
+        foods = [row[1] for row in scored]
     else:
         foods.sort(key=lambda food: food.name.lower())
-    return [_food_read(food, user.id) for food in foods[:limit]]
+    return [_food_read(food, user.id, favourites) for food in foods[:limit]]
+
+
+@router.get("/foods/quick", response_model=QuickFoods)
+async def quick_foods(
+    session: SessionDep,
+    user: CurrentUser,
+    limit: int = Query(default=12, ge=1, le=50),
+) -> QuickFoods:
+    """What adding food opens on: the starred foods, then what was eaten
+    lately — each with the amount it was last eaten in."""
+    starred = await _favourite_ids(session, user)
+    uses = await _recent_uses(session, user)
+    favourites = set(starred)
+    foods = await _foods_by_id(session, user, favourites | set(list(uses)[: limit * 2]))
+
+    def pick(food: Food) -> FoodPick:
+        body = FoodPick(**_food_read(food, user.id, favourites).model_dump())
+        if food.id in uses:
+            body.last_quantity, body.last_unit, body.last_day = uses[food.id]
+        return body
+
+    live = {food_id: food for food_id, food in foods.items() if not food.archived}
+    return QuickFoods(
+        favourites=[pick(live[food_id]) for food_id in starred if food_id in live],
+        recent=[
+            pick(live[food_id]) for food_id in uses if food_id in live and food_id not in favourites
+        ][:limit],
+    )
+
+
+async def _visible_food(session, user, food_id: uuid.UUID) -> Food:
+    food = await session.get(Food, food_id)
+    if food is None or (food.user_id is not None and food.user_id != user.id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No such food")
+    return food
+
+
+@router.put("/foods/{food_id}/favourite", response_model=FoodRead)
+async def star_food(food_id: uuid.UUID, session: SessionDep, user: CurrentUser) -> FoodRead:
+    """Any food you can see may be starred, a shared staple included."""
+    food = await _visible_food(session, user, food_id)
+    if await session.get(FavouriteFood, (user.id, food.id)) is None:
+        session.add(FavouriteFood(user_id=user.id, food_id=food.id))
+        await session.flush()
+    return _food_read(food, user.id, {food.id})
+
+
+@router.delete("/foods/{food_id}/favourite", response_model=FoodRead)
+async def unstar_food(food_id: uuid.UUID, session: SessionDep, user: CurrentUser) -> FoodRead:
+    food = await _visible_food(session, user, food_id)
+    starred = await session.get(FavouriteFood, (user.id, food.id))
+    if starred is not None:
+        await session.delete(starred)
+        await session.flush()
+    return _food_read(food, user.id, set())
 
 
 @router.post("/foods", response_model=FoodRead, status_code=status.HTTP_201_CREATED)
@@ -278,7 +378,7 @@ async def create_food(payload: FoodWrite, session: SessionDep, user: CurrentUser
     )
     session.add(food)
     await session.flush()
-    return _food_read(food, user.id)
+    return _food_read(food, user.id, set())
 
 
 @router.patch("/foods/{food_id}", response_model=FoodRead)
@@ -307,7 +407,7 @@ async def update_food(
     if {"name", "brand"} & fields.keys():
         food.search_key = nutrition.key_of(food.name, [*(food.aliases or []), food.brand or ""])
     await session.flush()
-    return _food_read(food, user.id)
+    return _food_read(food, user.id, set(await _favourite_ids(session, user)))
 
 
 @router.post("/foods/scan", response_model=ScanOut)
@@ -333,7 +433,8 @@ async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = 
         )
     ).scalar_one_or_none()
     if existing is not None:
-        return ScanOut(found=True, barcode=barcode, food=_food_read(existing, user.id))
+        favourites = set(await _favourite_ids(session, user))
+        return ScanOut(found=True, barcode=barcode, food=_food_read(existing, user.id, favourites))
 
     product = await food_lookup.lookup(barcode)
     if product is None:
@@ -361,7 +462,7 @@ async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = 
     )
     session.add(food)
     await session.flush()
-    return ScanOut(found=True, barcode=barcode, food=_food_read(food, user.id))
+    return ScanOut(found=True, barcode=barcode, food=_food_read(food, user.id, set()))
 
 
 # --- Reading what was typed ---------------------------------------------------
@@ -484,16 +585,23 @@ async def _foods_by_id(session, user, ids: set[uuid.UUID]) -> dict[uuid.UUID, Fo
 @router.post("/meals", response_model=MealRead, status_code=status.HTTP_201_CREATED)
 async def create_meal(payload: MealWrite, session: SessionDep, user: CurrentUser) -> MealRead:
     foods = await _foods_by_id(session, user, {item.food_id for item in payload.items})
+    items = [
+        _build_item(item, foods.get(item.food_id) if item.food_id else None, index)
+        for index, item in enumerate(payload.items)
+    ]
+    slot = slots.slot_of(payload.slot, payload.at, payload.title)
+    # One food is best called by its name; a plate of several by its slot
+    title = (payload.title or "").strip() or (
+        items[0].label if len(items) == 1 else slots.LABELS[slot]
+    )
     meal = Meal(
         user_id=user.id,
         day=payload.day,
         at=payload.at,
-        title=payload.title.strip(),
+        title=title[:160],
+        slot=slot,
         note=payload.note,
-        items=[
-            _build_item(item, foods.get(item.food_id) if item.food_id else None, index)
-            for index, item in enumerate(payload.items)
-        ],
+        items=items,
     )
     session.add(meal)
     await session.flush()
@@ -514,6 +622,7 @@ async def meal_from_recipe(payload: FromRecipe, session: SessionDep, user: Curre
         day=payload.day,
         at=payload.at,
         title=recipe.title,
+        slot=slots.slot_of(payload.slot, payload.at, recipe.title),
         recipe_id=recipe.id,
         recipe_title=recipe.title,
         servings=payload.servings,
@@ -574,6 +683,68 @@ async def update_meal(
         setattr(meal, name, value)
     await session.flush()
     return _meal_read(meal)
+
+
+def _copy_of(meal: Meal, day: date, at, slot: str | None) -> Meal:
+    """A new meal with the same plate: the items keep the numbers they were
+    eaten at, so a copy of last Tuesday's lunch adds up exactly as it did.
+    The recording stays with the original — it was said once."""
+    return Meal(
+        user_id=meal.user_id,
+        day=day,
+        at=meal.at if at is None else at,
+        title=meal.title,
+        slot=slot or meal.slot,
+        recipe_id=meal.recipe_id,
+        recipe_title=meal.recipe_title,
+        servings=meal.servings,
+        note=meal.note,
+        items=[
+            MealItem(
+                position=item.position,
+                food_id=item.food_id,
+                label=item.label,
+                quantity=item.quantity,
+                unit=item.unit,
+                grams=item.grams,
+                kcal100=item.kcal100,
+                protein100=item.protein100,
+                carbs100=item.carbs100,
+                fat100=item.fat100,
+            )
+            for item in meal.items
+        ],
+    )
+
+
+@router.post("/meals/{meal_id}/copy", response_model=MealRead, status_code=status.HTTP_201_CREATED)
+async def copy_meal(
+    meal_id: uuid.UUID, payload: MealCopy, session: SessionDep, user: CurrentUser
+) -> MealRead:
+    meal = await _own_meal(session, user, meal_id)
+    copy = _copy_of(meal, payload.day, payload.at, payload.slot)
+    session.add(copy)
+    await session.flush()
+    return _meal_read(copy)
+
+
+@router.post("/days/{day}/copy", response_model=list[MealRead], status_code=status.HTTP_201_CREATED)
+async def copy_day(
+    day: date, payload: DayCopy, session: SessionDep, user: CurrentUser
+) -> list[MealRead]:
+    """Another day's meals onto this one — all of them, or one slot's
+    ("yesterday's breakfast again")."""
+    source = await _meals_between(session, user, payload.from_day, payload.from_day)
+    if payload.slot:
+        source = [meal for meal in source if meal.slot == payload.slot]
+    if not source:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Nothing to copy on that day"
+        )
+    copies = [_copy_of(meal, day, None, None) for meal in source]
+    session.add_all(copies)
+    await session.flush()
+    return [_meal_read(meal) for meal in copies]
 
 
 @router.delete("/meals/{meal_id}", status_code=status.HTTP_204_NO_CONTENT)

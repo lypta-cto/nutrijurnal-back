@@ -13,12 +13,13 @@ The second rule is the public one: every row a person writes carries their
 """
 
 import uuid
-from datetime import date, time
+from datetime import date, datetime, time
 
 from sqlalchemy import (
     JSON,
     Boolean,
     Date,
+    DateTime,
     Float,
     ForeignKey,
     Index,
@@ -27,6 +28,7 @@ from sqlalchemy import (
     String,
     Text,
     Time,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -148,6 +150,11 @@ class Meal(UUIDMixin, TimestampMixin, Base):
     day: Mapped[date] = mapped_column(Date, nullable=False)
     at: Mapped[time | None] = mapped_column(Time)
     title: Mapped[str] = mapped_column(String(160), nullable=False)
+    # breakfast · lunch · dinner · snack — what the diary groups by, whatever
+    # the meal is called (services/slots.py)
+    slot: Mapped[str] = mapped_column(
+        String(10), nullable=False, default="snack", server_default="snack"
+    )
 
     recipe_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("recipes.id", ondelete="SET NULL")
@@ -182,6 +189,23 @@ class Meal(UUIDMixin, TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return f"<Meal {self.day} {self.title!r}>"
+
+
+class FavouriteFood(Base):
+    """A food someone starred, so it is first in line when they add one.
+    Any food they can see may be starred — a shared staple included."""
+
+    __tablename__ = "favourite_foods"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    food_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("foods.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
 
 
 class MealItem(UUIDMixin, Base):

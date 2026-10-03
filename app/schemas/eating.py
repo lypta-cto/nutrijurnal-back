@@ -9,6 +9,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.models.eating import UNITS
 from app.schemas.goals import GoalProfile
 
+# Where a meal sits in the day — the diary groups by it (services/slots.py)
+Slot = Literal["breakfast", "lunch", "dinner", "snack"]
+
 
 class Macros(BaseModel):
     kcal: float = 0
@@ -44,6 +47,8 @@ class FoodRead(BaseModel):
     archived: bool = False
     # Yours to edit, or one of the shared staples nobody may change
     mine: bool = False
+    # Starred, so it comes first when adding food
+    favourite: bool = False
 
     @field_validator("units", mode="before")
     @classmethod
@@ -51,6 +56,20 @@ class FoodRead(BaseModel):
         """A food with nothing but grams is stored with `units = NULL`, and
         reading it must not 500."""
         return value or {}
+
+
+class FoodPick(FoodRead):
+    """A food offered for a quick add, with the amount it was last eaten in —
+    one tap writes it down again the same way."""
+
+    last_quantity: float | None = None
+    last_unit: str | None = None
+    last_day: date | None = None
+
+
+class QuickFoods(BaseModel):
+    favourites: list[FoodPick] = []
+    recent: list[FoodPick] = []
 
 
 class FoodWrite(BaseModel):
@@ -118,6 +137,7 @@ class MealRead(Macros):
     day: date
     at: time | None = None
     title: str
+    slot: Slot = "snack"
     recipe_id: uuid.UUID | None = None
     recipe_title: str | None = None
     servings: float = 1
@@ -133,7 +153,10 @@ class MealRead(Macros):
 class MealWrite(BaseModel):
     day: date
     at: time | None = None
-    title: str = Field(default="Meal", min_length=1, max_length=160)
+    # Left out: the one item's name, or the slot's ("Breakfast")
+    title: str | None = Field(default=None, max_length=160)
+    # Left out: taken from the time, then from the title, else a snack
+    slot: Slot | None = None
     note: str | None = Field(default=None, max_length=4000)
     items: list[ItemWrite] = Field(default=[], max_length=100)
 
@@ -142,6 +165,7 @@ class MealPatch(BaseModel):
     day: date | None = None
     at: time | None = None
     title: str | None = Field(default=None, min_length=1, max_length=160)
+    slot: Slot | None = None
     note: str | None = Field(default=None, max_length=4000)
 
 
@@ -149,8 +173,25 @@ class FromRecipe(BaseModel):
     recipe_id: uuid.UUID
     day: date
     at: time | None = None
+    slot: Slot | None = None
     # How many servings of it were actually eaten
     servings: float = Field(default=1, gt=0, le=50)
+
+
+class MealCopy(BaseModel):
+    """The same plate again, onto another day — or the same one."""
+
+    day: date
+    # Left out: the time and the slot it had
+    at: time | None = None
+    slot: Slot | None = None
+
+
+class DayCopy(BaseModel):
+    """Everything eaten on one day (or only its breakfast) onto another."""
+
+    from_day: date
+    slot: Slot | None = None
 
 
 class RecipeItemRead(BaseModel):
