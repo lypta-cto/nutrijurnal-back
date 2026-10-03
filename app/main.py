@@ -10,7 +10,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError, OperationalError
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.routes import auth, eating, oauth, users
+from app.api.routes import auth, body, eating, oauth, users
 from app.core.config import settings
 from app.core.database import SessionLocal, engine
 from app.services import eating_seed
@@ -71,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(oauth.router, prefix=settings.API_V1_PREFIX)
     app.include_router(users.router, prefix=settings.API_V1_PREFIX)
     app.include_router(eating.router, prefix=settings.API_V1_PREFIX)
+    app.include_router(body.router, prefix=settings.API_V1_PREFIX)
 
     # Uploaded avatars. Behind a CDN or object store in production — see
     # app/services/media.py.

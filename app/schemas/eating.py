@@ -266,6 +266,10 @@ class DayRead(BaseModel):
     totals: Macros
     target: Macros | None = None
     meals: list[MealRead] = []
+    # Read beside the food, so Today needs one request
+    water_ml: int = 0
+    water_goal_ml: int = 2000
+    weight_kg: float | None = None
 
 
 class ParseIn(BaseModel):
@@ -302,6 +306,8 @@ class SettingsRead(BaseModel):
     onboarded_at: datetime | None = None
     # The calculator's answers, when they were given
     profile: GoalProfile | None = None
+    water_goal_ml: int = 2000
+    water_glass_ml: int = 250
     # How full the pantry and the recipe book are — the shared foods count too
     foods: int = 0
     recipes: int = 0
@@ -312,6 +318,8 @@ class SettingsPatch(BaseModel):
     target_protein: int | None = Field(default=None, ge=0, le=1000)
     target_carbs: int | None = Field(default=None, ge=0, le=2000)
     target_fat: int | None = Field(default=None, ge=0, le=1000)
+    water_goal_ml: int | None = Field(default=None, ge=250, le=10000)
+    water_glass_ml: int | None = Field(default=None, ge=50, le=2000)
     # True marks the first-run questions as answered (or skipped); it is never
     # unset, so sending false is simply ignored
     onboarded: bool | None = None

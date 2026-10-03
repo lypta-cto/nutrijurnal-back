@@ -17,6 +17,7 @@ from fastapi.responses import Response
 from sqlalchemy import func, or_, select, update
 
 from app.api.deps import CurrentUser, SessionDep
+from app.api.routes import body
 from app.models.eating import UNITS, FavouriteFood, Food, Meal, MealItem, Recipe, RecipeItem
 from app.schemas.eating import (
     DayCopy,
@@ -234,6 +235,8 @@ async def read_settings(session: SessionDep, user: CurrentUser) -> SettingsRead:
         target_fat=user.target_fat,
         onboarded_at=user.onboarded_at,
         profile=goals.profile_of(user),
+        water_goal_ml=body.water_goal(user),
+        water_glass_ml=body.glass_size(user),
         foods=foods,
         recipes=recipes,
     )
@@ -246,6 +249,9 @@ async def write_settings(
     fields = payload.model_dump(exclude_unset=True)
     for name in ("target_kcal", "target_protein", "target_carbs", "target_fat"):
         if name in fields:
+            setattr(user, name, fields[name])
+    for name in ("water_goal_ml", "water_glass_ml"):
+        if fields.get(name):
             setattr(user, name, fields[name])
     if payload.profile is not None:
         goals.keep_profile(user, payload.profile)
@@ -551,7 +557,17 @@ async def list_days(
 async def read_day(day: date, session: SessionDep, user: CurrentUser) -> DayRead:
     meals = [_meal_read(meal) for meal in await _meals_between(session, user, day, day)]
     totals = nutrition.total([meal.model_dump() for meal in meals])
-    return DayRead(day=day, totals=Macros(**totals), target=_target(user), meals=meals)
+    water = await body.water_totals(session, user, day, day)
+    weight = await body.weights_between(session, user, day, day)
+    return DayRead(
+        day=day,
+        totals=Macros(**totals),
+        target=_target(user),
+        meals=meals,
+        water_ml=water.get(day, 0),
+        water_goal_ml=body.water_goal(user),
+        weight_kg=weight[0].kg if weight else None,
+    )
 
 
 async def _own_meal(session, user, meal_id: uuid.UUID) -> Meal:

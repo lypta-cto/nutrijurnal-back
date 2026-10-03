@@ -81,6 +81,11 @@ class User(UUIDMixin, TimestampMixin, Base):
     protein_per_kg: Mapped[float | None] = mapped_column(Float)
     fat_percent: Mapped[int | None] = mapped_column(Integer)
 
+    # --- Water ------------------------------------------------------------------
+    # Null reads as the defaults in app/api/routes/body.py (2 l, 250 ml glasses)
+    water_goal_ml: Mapped[int | None] = mapped_column(Integer)
+    water_glass_ml: Mapped[int | None] = mapped_column(Integer)
+
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
