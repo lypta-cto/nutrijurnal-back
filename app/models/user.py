@@ -2,7 +2,7 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, Enum, Integer, String
+from sqlalchemy import Boolean, DateTime, Enum, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
@@ -66,6 +66,20 @@ class User(UUIDMixin, TimestampMixin, Base):
     # frontend to /onboarding, so a new account never lands on an empty diary
     # with no idea what it is measuring against.
     onboarded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # --- What the targets were worked out from --------------------------------
+    # The calculator's answers, kept so Settings can reopen it where it was
+    # left. All optional: someone who types the numbers in by hand never has
+    # to say how old they are.
+    sex: Mapped[str | None] = mapped_column(String(8))  # female · male · other
+    birth_year: Mapped[int | None] = mapped_column(Integer)
+    height_cm: Mapped[float | None] = mapped_column(Float)
+    weight_kg: Mapped[float | None] = mapped_column(Float)
+    activity: Mapped[str | None] = mapped_column(String(12))
+    goal: Mapped[str | None] = mapped_column(String(8))  # lose · maintain · gain
+    goal_pace: Mapped[float | None] = mapped_column(Float)  # kg a week
+    protein_per_kg: Mapped[float | None] = mapped_column(Float)
+    fat_percent: Mapped[int | None] = mapped_column(Integer)
 
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         back_populates="user",

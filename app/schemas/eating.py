@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.models.eating import UNITS
+from app.schemas.goals import GoalProfile
 
 
 class Macros(BaseModel):
@@ -256,6 +257,8 @@ class SettingsRead(BaseModel):
     target_carbs: int | None = None
     target_fat: int | None = None
     onboarded_at: datetime | None = None
+    # The calculator's answers, when they were given
+    profile: GoalProfile | None = None
     # How full the pantry and the recipe book are — the shared foods count too
     foods: int = 0
     recipes: int = 0
@@ -269,3 +272,5 @@ class SettingsPatch(BaseModel):
     # True marks the first-run questions as answered (or skipped); it is never
     # unset, so sending false is simply ignored
     onboarded: bool | None = None
+    # The answers the targets were worked out from, kept whole
+    profile: GoalProfile | None = None

@@ -42,7 +42,8 @@ from app.schemas.eating import (
     SettingsPatch,
     SettingsRead,
 )
-from app.services import food_lookup, nutrition
+from app.schemas.goals import GoalEstimate, GoalProfile
+from app.services import food_lookup, goals, nutrition
 
 router = APIRouter(prefix="/eating", tags=["eating"])
 
@@ -196,6 +197,7 @@ async def read_settings(session: SessionDep, user: CurrentUser) -> SettingsRead:
         target_carbs=user.target_carbs,
         target_fat=user.target_fat,
         onboarded_at=user.onboarded_at,
+        profile=goals.profile_of(user),
         foods=foods,
         recipes=recipes,
     )
@@ -209,10 +211,19 @@ async def write_settings(
     for name in ("target_kcal", "target_protein", "target_carbs", "target_fat"):
         if name in fields:
             setattr(user, name, fields[name])
+    if payload.profile is not None:
+        goals.keep_profile(user, payload.profile)
     if fields.get("onboarded") and user.onboarded_at is None:
         user.onboarded_at = datetime.now(UTC)
     await session.flush()
     return await read_settings(session, user)
+
+
+@router.post("/goals/estimate", response_model=GoalEstimate)
+async def estimate_goals(payload: GoalProfile, _: CurrentUser) -> GoalEstimate:
+    """What a day should come to for this body and this goal. Nothing is
+    saved — the person reads it, adjusts it, and saves the targets they want."""
+    return goals.estimate(payload)
 
 
 # --- Foods --------------------------------------------------------------------
