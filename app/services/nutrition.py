@@ -38,6 +38,11 @@ UNIT_WORDS: dict[str, str] = {
     "grama": "g",
     "grami": "g",
     "g.": "g",
+    # How the deli counter weighs: "20 deka šunke" is 200 g
+    "dag": "dag",
+    "deka": "dag",
+    "dekagram": "dag",
+    "dekagrama": "dag",
     "kg": "kg",
     # A kilo and a litre change their ending with the number and the verb:
     # "2 litra vode", "popio sam litru", "pola kile", "1 kila jabuka"
@@ -316,13 +321,14 @@ class FoodLike:
     fat: float = 0
 
 
-# A kilo, a litre and a decilitre are only other spellings of the base units.
+# A kilo, a litre, a decilitre and a dekagram are other spellings of the base units.
 # The diary keeps amounts in the units every picker knows, so "1 kg piletine"
 # is written down as 1000 g — never as 1 of a unit the diary would read as a gram.
 SCALED_UNITS: dict[str, tuple[str, float]] = {
     "kg": ("g", 1000),
     "l": ("ml", 1000),
     "dl": ("ml", 100),
+    "dag": ("g", 10),
 }
 
 

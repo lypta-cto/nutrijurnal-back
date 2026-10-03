@@ -371,6 +371,9 @@ async def test_a_paste_of_more_than_fifty_things_reads_the_first_fifty(client: A
         ("pola litre mleka", [("Mleko 2.8%", "ml", 500)]),
         ("1,5 litara vode", [("Voda", "ml", 1500)]),
         ("prstohvat soli", [("So", "pinch", 0.5)]),
+        # The deli counter's dekagram
+        ("20 deka šunke", [("Šunka", "g", 200)]),
+        ("10 dag kačkavalja", [("Kačkavalj", "g", 100)]),
     ],
 )
 async def test_kilos_litres_and_pinches_come_back_at_their_weight(
