@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
-from sqlalchemy.exc import DBAPIError, OperationalError
+from sqlalchemy.exc import DBAPIError, IntegrityError, OperationalError
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api.routes import account, auth, body, demo, eating, oauth, progress, push, users
@@ -100,15 +100,30 @@ def create_app() -> FastAPI:
     # ConnectionError is in the list because asyncpg raises a bare
     # ConnectionRefusedError when the server isn't listening — SQLAlchemy never
     # gets the chance to wrap it as an OperationalError.
+    # The docker hint is for whoever runs the API on their own machine; the
+    # public is told something it can act on, and the cause goes to the log.
     @app.exception_handler(ConnectionError)
     @app.exception_handler(OperationalError)
     @app.exception_handler(DBAPIError)
     async def database_unavailable(_: Request, exc: Exception) -> JSONResponse:
+        logger.error("Database error", exc_info=exc)
+        detail = (
+            "Database unavailable. Is Postgres running? Try: docker compose up -d db"
+            if settings.ENVIRONMENT == "local"
+            else "Nutrijurnal is unavailable right now — try again in a moment."
+        )
         return JSONResponse(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            content={
-                "detail": "Database unavailable. Is Postgres running? Try: docker compose up -d db"
-            },
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"detail": detail}
+        )
+
+    # A write that breaks a constraint is a request that clashed with what is
+    # already saved (two taps racing each other), not a database that is down
+    @app.exception_handler(IntegrityError)
+    async def conflicting_write(_: Request, exc: IntegrityError) -> JSONResponse:
+        logger.warning("Write refused by a constraint", exc_info=exc)
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"detail": "That clashed with something already saved — reload and try again."},
         )
 
     @app.get("/health", tags=["meta"])
