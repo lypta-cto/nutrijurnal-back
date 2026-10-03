@@ -38,6 +38,12 @@ class Product:
     serving_grams: float | None
 
 
+# A 50-megapixel phone photo, decoded at half size, is still well under
+# this; a small file that claims a vast canvas (a decompression bomb) is not,
+# and is refused from its header before a single pixel is decoded.
+MAX_PIXELS = 50_000_000
+
+
 def read_barcode(content: bytes) -> str | None:
     """The digits under the bars, from a photo. zxing knows EAN-13 and UPC,
     which is what a packet in a European shop carries."""
@@ -54,10 +60,15 @@ def read_barcode(content: bytes) -> str | None:
         pass
 
     try:
-        image = ImageOps.exif_transpose(Image.open(BytesIO(content)))
+        image = Image.open(BytesIO(content))
+        # A JPEG can be decoded straight at a fraction of its size — a barcode
+        # needs nowhere near a 48-megapixel sensor's worth of pixels
+        image.draft("L", (2000, 2000))
+        if image.width * image.height > MAX_PIXELS:
+            return None
+        image = ImageOps.exif_transpose(image).convert("L")
     except Exception:  # noqa: BLE001 — anything unreadable is "no barcode"
         return None
-    image = image.convert("L")
     tried = [image]
     for side in (2000, 1200):
         if max(image.size) > side:

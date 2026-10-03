@@ -7,6 +7,7 @@ read-only, and a food someone types in or scans is theirs alone. Every meal
 item carries the food's numbers as they were when it was eaten.
 """
 
+import asyncio
 import re
 import uuid
 from datetime import UTC, date, datetime, time, timedelta
@@ -476,13 +477,16 @@ async def _food_for_barcode(session, user, barcode: str) -> ScanOut:
 async def scan_food(session: SessionDep, user: CurrentUser, photo: UploadFile = File()) -> ScanOut:
     """A photo of the barcode, for phones whose camera the page cannot use
     live: read the digits here, then look them up."""
-    content = await photo.read()
+    # One byte past the limit is enough to know — never the whole upload in memory
+    content = await photo.read(MAX_PHOTO_BYTES + 1)
     if len(content) > MAX_PHOTO_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="That photo is over 12 MB",
         )
-    barcode = food_lookup.read_barcode(content)
+    # Decoding a phone photo takes a while; off the event loop, it holds up
+    # nobody else's request
+    barcode = await asyncio.to_thread(food_lookup.read_barcode, content)
     if barcode is None:
         return ScanOut(found=False, message="No barcode in that photo — try filling the frame.")
     return await _food_for_barcode(session, user, barcode)
@@ -930,13 +934,13 @@ async def attach_voice(
     for — a phone, in a kitchen.
     """
     meal = await _own_meal(session, user, meal_id)
-    content = await file.read()
+    content = await file.read(MAX_VOICE_BYTES + 1)
 
     if not content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Empty recording")
     if len(content) > MAX_VOICE_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail="That recording is too long — keep it under two minutes.",
         )
 

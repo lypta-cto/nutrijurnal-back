@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Food
 from app.services import food_lookup
-from tests.helpers import PREFIX, auth_headers, own_food
+from tests.helpers import PREFIX, auth_headers, own_food, png_claiming
 
 # zxing-cpp adds the check digit: 385678901234 → 3856789012348
 EAN = "3856789012348"
@@ -292,6 +292,16 @@ async def test_a_photo_without_a_product_barcode_says_so(
     assert (body["found"], body["barcode"], body["food"]) == (False, None, None)
     assert body["message"] == "No barcode in that photo — try filling the frame."
     assert open_food_facts.requests == []
+
+
+@pytest.mark.parametrize(("width", "height"), [(9000, 9000), (100_000, 100_000)])
+async def test_a_photo_claiming_a_vast_canvas_is_refused_before_decoding(
+    client: AsyncClient, me, width, height
+):
+    response = await _scan(client, me, png_claiming(width, height), name="bomb.png")
+
+    assert response.status_code == 200
+    assert response.json()["found"] is False
 
 
 async def test_a_photo_is_bounded_and_required(client: AsyncClient, me):

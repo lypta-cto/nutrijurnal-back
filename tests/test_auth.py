@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.security import create_access_token
 from app.models import Food, Meal, Recipe, RefreshToken, Role, User
+from tests.helpers import png_claiming
 
 PREFIX = settings.API_V1_PREFIX
 REGISTER = {"email": "user@example.com", "password": "supersecret1", "full_name": "Test User"}
@@ -579,6 +580,15 @@ async def test_an_avatar_is_re_encoded_and_replaces_the_last_one(
         headers=headers,
     )
     assert not_an_image.status_code == 400
+
+    # A few bytes claiming a vast canvas is refused from its header
+    for width, height in ((9000, 9000), (100_000, 100_000)):
+        bomb = await client.post(
+            f"{PREFIX}/auth/me/avatar",
+            files={"file": ("bomb.png", png_claiming(width, height), "image/png")},
+            headers=headers,
+        )
+        assert bomb.status_code == 400, (width, bomb.text)
 
     monkeypatch.setattr(settings, "MAX_AVATAR_BYTES", 1024)
     too_big = await client.post(

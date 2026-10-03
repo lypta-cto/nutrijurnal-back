@@ -1,4 +1,8 @@
+import io
+import zlib
+
 from httpx import AsyncClient
+from PIL import Image
 
 from app.core.config import settings
 
@@ -100,3 +104,16 @@ async def meal(client: AsyncClient, headers: dict, day: str, *items: dict, **fie
     response = await client.post(f"{PREFIX}/eating/meals", json=body, headers=headers)
     assert response.status_code == 201, response.text
     return response.json()
+
+
+def png_claiming(width: int, height: int) -> bytes:
+    """A tiny PNG whose header claims a vast canvas — the shape of a
+    decompression bomb, without ever allocating one in the test."""
+    buffer = io.BytesIO()
+    Image.new("L", (8, 8)).save(buffer, format="PNG")
+    data = bytearray(buffer.getvalue())
+    # IHDR follows the 8-byte signature: length, "IHDR", width, height, …, CRC
+    data[16:20] = width.to_bytes(4, "big")
+    data[20:24] = height.to_bytes(4, "big")
+    data[29:33] = zlib.crc32(bytes(data[12:29])).to_bytes(4, "big")
+    return bytes(data)
