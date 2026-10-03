@@ -203,6 +203,9 @@ async def test_a_drink_sold_by_the_litre_is_measured_in_millilitres(
         ("1 portion", None),
         ("", None),
         ("0 g", None),
+        # A typo on the community's label is not a portion
+        ("99999 g", None),
+        ("5000 ml", 5000),
     ],
 )
 def test_a_serving_size_is_read_by_the_number_with_a_unit(serving, grams):
@@ -230,6 +233,10 @@ async def test_a_packet_sold_by_weight_stays_in_grams(
         {"product_name": "No energy", "nutriments": {"proteins_100g": 10}},
         {"product_name": "  ", "nutriments": {"energy-kcal_100g": 100}},
         {"nutriments": {"energy-kcal_100g": 100}},
+        # Numbers no food can hold: kilojoules in the kcal field, a slipped decimal
+        {"product_name": "Keks", "nutriments": {"energy-kcal_100g": 1900}},
+        {"product_name": "Keks", "nutriments": {"energy-kcal_100g": 450, "fat_100g": 250}},
+        {"product_name": "Keks", "nutriments": {"energy-kcal_100g": -5}},
     ],
 )
 async def test_a_product_without_a_name_or_energy_is_a_miss(

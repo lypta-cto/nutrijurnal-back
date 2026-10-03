@@ -12,6 +12,8 @@ from dataclasses import dataclass
 
 import httpx
 
+from app.schemas.eating import MAX_KCAL_PER_100, MAX_MACRO_PER_100, MAX_PORTION_GRAMS
+
 API = "https://world.openfoodfacts.org/api/v2/product/{barcode}.json"
 FIELDS = "product_name,product_name_sr,brands,nutriments,serving_size,quantity,product_quantity"
 # Open Food Facts asks every client to name itself, so a misbehaving one can be told apart
@@ -89,7 +91,7 @@ def serving_grams(serving: str) -> float | None:
     if match is None:
         return None
     grams = float(match.group(1).replace(",", "."))
-    return grams if grams > 0 else None
+    return grams if 0 < grams <= MAX_PORTION_GRAMS else None
 
 
 def _number(nutriments: dict, *names: str) -> float | None:
@@ -127,14 +129,24 @@ async def lookup(barcode: str) -> Product | None:
     name = (product.get("product_name_sr") or product.get("product_name") or "").strip()
     if not name:
         return None
+    protein = _number(nutriments, "proteins_100g") or 0.0
+    carbs = _number(nutriments, "carbohydrates_100g") or 0.0
+    fat = _number(nutriments, "fat_100g") or 0.0
+    # Anyone can edit Open Food Facts: kilojoules typed as kcal or a slipped
+    # decimal would be kept as this person's food and skew every total it
+    # joins, so a label past what a food can hold is read from the packet
+    if not 0 <= kcal <= MAX_KCAL_PER_100 or not all(
+        0 <= value <= MAX_MACRO_PER_100 for value in (protein, carbs, fat)
+    ):
+        return None
     return Product(
         barcode=barcode,
         name=name[:120],
         brand=((product.get("brands") or "").split(",")[0].strip() or None),
         kcal=kcal,
-        protein=_number(nutriments, "proteins_100g") or 0.0,
-        carbs=_number(nutriments, "carbohydrates_100g") or 0.0,
-        fat=_number(nutriments, "fat_100g") or 0.0,
+        protein=protein,
+        carbs=carbs,
+        fat=fat,
         base_unit="ml" if BY_VOLUME.search(product.get("quantity") or "") else "g",
         serving_grams=serving_grams(product.get("serving_size") or ""),
     )

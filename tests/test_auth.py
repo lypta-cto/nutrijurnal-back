@@ -693,5 +693,8 @@ async def test_the_user_admin_is_for_admins_only(client: AsyncClient, session: A
     listed = await client.get(f"{PREFIX}/users", headers=admin_headers)
     assert listed.status_code == 200
     assert listed.json()["meta"]["total"] == 2
+    # A page number past any real list is refused, not sent to the database as an offset
+    far = await client.get(f"{PREFIX}/users", params={"page": 10**12}, headers=admin_headers)
+    assert far.status_code == 422
     own = await client.delete(f"{PREFIX}/users/{admin['user']['id']}", headers=admin_headers)
     assert own.status_code == 400

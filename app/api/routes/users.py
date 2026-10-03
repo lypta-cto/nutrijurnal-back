@@ -29,7 +29,7 @@ async def list_users(
     q: str | None = Query(default=None, description="Matches email or name"),
     role: Role | None = None,
     is_active: bool | None = None,
-    page: int = Query(default=1, ge=1),
+    page: int = Query(default=1, ge=1, le=100_000),
     page_size: int = Query(default=20, ge=1, le=100),
 ) -> UserPage:
     filters = []

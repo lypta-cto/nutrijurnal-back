@@ -66,23 +66,27 @@ async def test_what_a_food_accepts_is_bounded(client: AsyncClient, me):
         assert response.status_code == 422, case
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/schemas/eating.py FoodWrite.units is dict[str, float] with no bound on a "
-        "portion's weight (routes only drop unknown units and non-positive ones): a 'piece' "
-        "of 1e308 g is stored, a meal of it overflows to infinity, and every number of that "
-        "meal and of the whole day is answered as null to the diary, Progress and the export"
-    ),
-)
 async def test_a_portion_weighs_what_a_portion_can(client: AsyncClient, me):
+    """A 'piece' of 1e308 g made a meal of it infinite, and every number of
+    that day was answered as null to the diary, Progress and the export."""
+    path = f"{PREFIX}/eating/foods"
+    for units in ({"slice": 1e308}, {"piece": 5000.5}):
+        response = await client.post(
+            path, json={"name": "Hleb", "kcal": 250, "units": units}, headers=me
+        )
+        assert response.status_code == 422, units
+    too_many = {f"unit {n}": 10 for n in range(21)}
     response = await client.post(
-        f"{PREFIX}/eating/foods",
-        json={"name": "Hleb", "kcal": 250, "units": {"slice": 1e308}},
-        headers=me,
+        path, json={"name": "Hleb", "kcal": 250, "units": too_many}, headers=me
     )
-
     assert response.status_code == 422
+
+    family_pizza = await own_food(client, me, name="Pica", units={"piece": 5000})
+    assert family_pizza["units"] == {"piece": 5000}
+    patched = await client.patch(
+        f"{path}/{family_pizza['id']}", json={"units": {"slice": 1e308}}, headers=me
+    )
+    assert patched.status_code == 422
 
 
 async def test_the_library_lists_the_shared_foods_and_ones_own(client: AsyncClient, me):

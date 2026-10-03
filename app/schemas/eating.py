@@ -18,6 +18,15 @@ Step = Annotated[str, Field(max_length=2000)]
 Alias = Annotated[str, Field(max_length=120)]
 NOTE_MAX = 4000
 
+# The most a food's own portion may weigh — a family pizza, a big tub. Past
+# it a slipped digit (or a 1e308) makes every total of the day infinite, and
+# the diary, Progress and the export answer it as null
+MAX_PORTION_GRAMS = 5000
+Portion = Annotated[float, Field(le=MAX_PORTION_GRAMS)]
+# Per 100 g, nothing has more energy than pure fat or more of a macro than all of it
+MAX_KCAL_PER_100 = 1000
+MAX_MACRO_PER_100 = 100
+
 
 class Macros(BaseModel):
     kcal: float = 0
@@ -82,12 +91,14 @@ class FoodWrite(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     name_en: str | None = Field(default=None, max_length=120)
     brand: str | None = Field(default=None, max_length=120)
-    kcal: float = Field(ge=0, le=1000)
-    protein: float = Field(default=0, ge=0, le=100)
-    carbs: float = Field(default=0, ge=0, le=100)
-    fat: float = Field(default=0, ge=0, le=100)
+    kcal: float = Field(ge=0, le=MAX_KCAL_PER_100)
+    protein: float = Field(default=0, ge=0, le=MAX_MACRO_PER_100)
+    carbs: float = Field(default=0, ge=0, le=MAX_MACRO_PER_100)
+    fat: float = Field(default=0, ge=0, le=MAX_MACRO_PER_100)
     base_unit: str = "g"
-    units: dict[str, float] = {}
+    # Grams per portion; a unit the diary doesn't know, or a portion of
+    # nothing, is dropped rather than refused
+    units: dict[str, Portion] = Field(default={}, max_length=20)
     barcode: str | None = Field(default=None, max_length=32)
     aliases: list[Alias] = Field(default=[], max_length=20)
 
@@ -96,12 +107,12 @@ class FoodPatch(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     name_en: str | None = Field(default=None, max_length=120)
     brand: str | None = Field(default=None, max_length=120)
-    kcal: float | None = Field(default=None, ge=0, le=1000)
-    protein: float | None = Field(default=None, ge=0, le=100)
-    carbs: float | None = Field(default=None, ge=0, le=100)
-    fat: float | None = Field(default=None, ge=0, le=100)
+    kcal: float | None = Field(default=None, ge=0, le=MAX_KCAL_PER_100)
+    protein: float | None = Field(default=None, ge=0, le=MAX_MACRO_PER_100)
+    carbs: float | None = Field(default=None, ge=0, le=MAX_MACRO_PER_100)
+    fat: float | None = Field(default=None, ge=0, le=MAX_MACRO_PER_100)
     base_unit: str | None = None
-    units: dict[str, float] | None = None
+    units: dict[str, Portion] | None = Field(default=None, max_length=20)
     archived: bool | None = None
 
 
