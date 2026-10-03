@@ -66,6 +66,25 @@ async def test_what_a_food_accepts_is_bounded(client: AsyncClient, me):
         assert response.status_code == 422, case
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "BUG app/schemas/eating.py FoodWrite.units is dict[str, float] with no bound on a "
+        "portion's weight (routes only drop unknown units and non-positive ones): a 'piece' "
+        "of 1e308 g is stored, a meal of it overflows to infinity, and every number of that "
+        "meal and of the whole day is answered as null to the diary, Progress and the export"
+    ),
+)
+async def test_a_portion_weighs_what_a_portion_can(client: AsyncClient, me):
+    response = await client.post(
+        f"{PREFIX}/eating/foods",
+        json={"name": "Hleb", "kcal": 250, "units": {"slice": 1e308}},
+        headers=me,
+    )
+
+    assert response.status_code == 422
+
+
 async def test_the_library_lists_the_shared_foods_and_ones_own(client: AsyncClient, me):
     await own_food(client, me, name="Ajvar")
 

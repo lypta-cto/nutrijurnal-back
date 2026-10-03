@@ -323,3 +323,126 @@ async def test_a_paste_of_more_than_fifty_things_reads_the_first_fifty(client: A
 
     assert len(parsed["items"]) == 50
     assert parsed["unknown"] == ["1 banana"] * 10
+
+
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        # Glued to the number, with a point or a comma, or as a word
+        ("1,5kg piletine", [("Pileći file", "g", 1500)]),
+        ("0.5l mleka", [("Mleko 2.8%", "ml", 500)]),
+        ("kilo piletine", [("Pileći file", "g", 1000)]),
+        # A share of a litre, written as a fraction or said
+        ("1/2 l mleka", [("Mleko 2.8%", "ml", 500)]),
+        ("pola litre mleka", [("Mleko 2.8%", "ml", 500)]),
+        ("1,5 litara vode", [("Voda", "ml", 1500)]),
+        ("prstohvat soli", [("So", "pinch", 0.5)]),
+    ],
+)
+async def test_kilos_litres_and_pinches_come_back_at_their_weight(
+    client: AsyncClient, me, text, rows
+):
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
+
+
+async def test_a_unit_changed_on_its_own_keeps_the_amount_it_was(client: AsyncClient, me):
+    """Changing only the unit of a line keeps the quantity typed beside it:
+    200 g made into millilitres is 200 ml, not 200 of something else."""
+    yogurt = (await _parse(client, me, "jogurt"))["items"][0]["food_id"]
+    saved = await meal(client, me, "2026-09-21", {"food_id": yogurt, "quantity": 200, "unit": "g"})
+    [item] = saved["items"]
+
+    edited = await client.patch(
+        f"{PREFIX}/eating/meals/{saved['id']}/items/{item['id']}",
+        json={"unit": "ml"},
+        headers=me,
+    )
+
+    [item] = edited.json()["items"]
+    assert (item["quantity"], item["unit"], item["grams"]) == (200, "ml", 200)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "BUG app/services/nutrition.py UNIT_WORDS has no decilitre: 'dl', 'dcl' and "
+        "'decilitra' — how a glass of milk, juice or yogurt is said in Serbian — fall through "
+        "to a count, and a count of a drink is a 250 ml glass, so '2 dl mleka' is 500 ml "
+        "(2.5x) and '3 dl vode' 750 ml"
+    ),
+)
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        ("2 dl mleka", [("Mleko 2.8%", "ml", 200)]),
+        ("1 dl jogurta", [("Jogurt", "ml", 100)]),
+        ("3 decilitra mleka", [("Mleko 2.8%", "ml", 300)]),
+    ],
+)
+async def test_a_decilitre_is_a_tenth_of_a_litre(client: AsyncClient, me, text, rows):
+    assert _rows(await _parse(client, me, text)) == rows
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "BUG app/services/nutrition.py UNIT_WORDS knows 'litar'/'litara' and the English "
+        "'kilo', but not the case endings Serbian puts on them after a number or a verb: "
+        "'2 litra vode' is two 250 ml glasses (500 ml), 'litru mleka' one glass, "
+        "'pola kile piletine' half a piece (75 g) and '1 kila jabuka' one apple (180 g)"
+    ),
+)
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        ("2 litra vode", [("Voda", "ml", 2000)]),
+        ("litru mleka", [("Mleko 2.8%", "ml", 1000)]),
+        ("pola kile piletine", [("Pileći file", "g", 500)]),
+        ("1 kila jabuka", [("Jabuka", "g", 1000)]),
+    ],
+)
+async def test_litres_and_kilos_with_any_case_ending(client: AsyncClient, me, text, rows):
+    assert _rows(await _parse(client, me, text)) == rows
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "BUG app/services/nutrition.py read_amount() only reads an amount off the FRONT of a "
+        "line; a list typed as 'piletina 200 g' or 'chicken 250g' — the way a label or a "
+        "plan writes it — is one piece of the food (150 g of chicken, a 250 ml glass of "
+        "yogurt) and the number written is ignored"
+    ),
+)
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        ("piletina 200 g", [("Pileći file", "g", 200)]),
+        ("jogurt 200 ml", [("Jogurt", "ml", 200)]),
+        ("chicken 250g", [("Pileći file", "g", 250)]),
+    ],
+)
+async def test_an_amount_written_after_the_food(client: AsyncClient, me, text, rows):
+    assert _rows(await _parse(client, me, text)) == rows
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "BUG app/services/nutrition.py read_amount(): after 'half' the 'a' in front of the "
+        "unit is taken for part of the name, so the unit is never read — 'half a litre of "
+        "milk' is half a glass (125 ml) and 'half a kilo of chicken' half a piece (75 g)"
+    ),
+)
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        ("half a litre of milk", [("Mleko 2.8%", "ml", 500)]),
+        ("half a kilo of chicken", [("Pileći file", "g", 500)]),
+    ],
+)
+async def test_half_a_unit_said_in_english(client: AsyncClient, me, text, rows):
+    assert _rows(await _parse(client, me, text)) == rows
