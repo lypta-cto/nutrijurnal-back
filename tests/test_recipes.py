@@ -163,16 +163,6 @@ async def test_a_dish_known_by_its_numbers_is_split_by_its_servings(client: Asyn
     assert whole["kcal"] == 742
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/api/routes/eating.py update_item(): a meal item cooked from a stated-only "
-        "recipe carries the WHOLE dish per 100 g (kcal100 = stated) with grams = 100 x "
-        "servings/recipe.servings, but editing its quantity recomputes grams as "
-        "grams_for(None, quantity, 'serving') = 100 x quantity, i.e. quantity whole dishes. "
-        "For a dish written for 2, changing 1 serving to 2 gives 1484 kcal instead of 742"
-    ),
-)
 async def test_changing_how_many_servings_of_a_stated_dish_were_eaten(client: AsyncClient, me):
     pie = await _recipe(
         client, me, title="Pita sa sirom", servings=2, stated={"kcal": 742, "protein": 24}
@@ -186,6 +176,18 @@ async def test_changing_how_many_servings_of_a_stated_dish_were_eaten(client: As
     )
 
     assert second.json()["kcal"] == 742
+    half = await client.patch(
+        f"{PREFIX}/eating/meals/{eaten['id']}/items/{item}", json={"quantity": 0.5}, headers=me
+    )
+    assert half.json()["kcal"] == 185.5
+
+
+async def test_a_stated_dish_for_three_is_a_third_without_rounding_it_away(client: AsyncClient, me):
+    stew = await _recipe(client, me, title="Gulaš", servings=3, stated={"kcal": 1000})
+
+    eaten = (await _cook(client, me, stew["id"], 1)).json()
+
+    assert eaten["kcal"] == 333.3
 
 
 async def test_real_ingredients_win_over_stated_numbers(client: AsyncClient, me, foods):

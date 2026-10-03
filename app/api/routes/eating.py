@@ -705,11 +705,13 @@ async def meal_from_recipe(payload: FromRecipe, session: SessionDep, user: Curre
         )
 
     # A dish that arrived as a line of numbers has nothing to copy, but it is
-    # still a plate that was eaten. One item carries what the book printed:
-    # 100 g at the stated per-serving numbers, so the scaling below works the
-    # same as it does for real ingredients and the day adds up.
+    # still a plate that was eaten. The stated numbers are the whole dish, so
+    # one item carries ONE serving of them per 100 g and weighs 100 g a
+    # serving — the same shape as a quick-kcal line, so changing how many
+    # servings were eaten later is simply a new quantity.
     if not meal.items and isinstance(recipe.stated, dict):
         stated = recipe.stated
+        per_serving = 1 / (recipe.servings or 1)
         meal.items.append(
             MealItem(
                 position=0,
@@ -717,11 +719,11 @@ async def meal_from_recipe(payload: FromRecipe, session: SessionDep, user: Curre
                 label=recipe.title,
                 quantity=payload.servings,
                 unit="serving",
-                grams=round(100 * share, 1),
-                kcal100=float(stated.get("kcal") or 0),
-                protein100=float(stated.get("protein") or 0),
-                carbs100=float(stated.get("carbs") or 0),
-                fat100=float(stated.get("fat") or 0),
+                grams=round(100 * payload.servings, 2),
+                kcal100=float(stated.get("kcal") or 0) * per_serving,
+                protein100=float(stated.get("protein") or 0) * per_serving,
+                carbs100=float(stated.get("carbs") or 0) * per_serving,
+                fat100=float(stated.get("fat") or 0) * per_serving,
             )
         )
 
