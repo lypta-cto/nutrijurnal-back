@@ -22,6 +22,8 @@ dependencies = [
     "pillow-heif>=0.18",
     "reportlab>=4.2",
     "zxing-cpp>=2.2",
+    # Reminders are Web Push messages: VAPID signing and payload encryption
+    "pywebpush>=2.0",
 ]
 
 [project.optional-dependencies]

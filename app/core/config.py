@@ -94,6 +94,24 @@ class Settings(BaseSettings):
     # run `python -m app.cli seed` from the deploy step instead.
     SEED_FOODS_ON_STARTUP: bool = True
 
+    # --- Reminders (Web Push) -------------------------------------------------
+    # A VAPID key pair signs every push; `python -m app.cli vapid` prints a
+    # fresh one. Without both keys the API still keeps reminders, it just has
+    # nothing to send them with (GET /push/config says so).
+    VAPID_PUBLIC_KEY: str | None = None
+    VAPID_PRIVATE_KEY: str | None = None
+    # Who the push services contact about this sender: mailto: or https:
+    VAPID_SUBJECT: str = "mailto:admin@example.com"
+    # The in-process loop that sends due reminders and does the daily tidying
+    # (expired demo accounts, meals deleted over a day ago). One per worker is
+    # safe: each reminder is claimed atomically before it is sent.
+    REMINDERS_ENABLED: bool = True
+    REMINDER_TICK_SECONDS: int = 60
+
+    @property
+    def push_enabled(self) -> bool:
+        return bool(self.VAPID_PUBLIC_KEY and self.VAPID_PRIVATE_KEY)
+
     # --- Operator account ----------------------------------------------------
     # Created by `python -m app.cli owner` — the one account that may use the
     # /users admin routes. Everyone else signs up through /auth/register.

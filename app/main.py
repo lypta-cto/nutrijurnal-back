@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -10,10 +11,10 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError, OperationalError
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.api.routes import auth, body, eating, oauth, progress, users
+from app.api.routes import auth, body, eating, oauth, progress, push, users
 from app.core.config import settings
 from app.core.database import SessionLocal, engine
-from app.services import eating_seed
+from app.services import eating_seed, reminders
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,12 @@ async def seed_shared_foods() -> None:
 async def lifespan(_: FastAPI):
     if settings.SEED_FOODS_ON_STARTUP:
         await seed_shared_foods()
+    stop = asyncio.Event()
+    loop = asyncio.create_task(reminders.run(stop)) if settings.REMINDERS_ENABLED else None
     yield
+    stop.set()
+    if loop is not None:
+        await loop
     await engine.dispose()
 
 
@@ -73,6 +79,7 @@ def create_app() -> FastAPI:
     app.include_router(eating.router, prefix=settings.API_V1_PREFIX)
     app.include_router(body.router, prefix=settings.API_V1_PREFIX)
     app.include_router(progress.router, prefix=settings.API_V1_PREFIX)
+    app.include_router(push.router, prefix=settings.API_V1_PREFIX)
 
     # Uploaded avatars. Behind a CDN or object store in production — see
     # app/services/media.py.

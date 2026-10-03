@@ -208,6 +208,27 @@ class FavouriteFood(Base):
     )
 
 
+class DeletedMeal(Base):
+    """A meal just deleted, kept whole for a day so the toast's Undo can put
+    it back exactly — same id, same items with the numbers they were eaten
+    at, the recording too. The diary itself no longer has it: the meal and its
+    items are really gone, and the reminder loop purges these after a day."""
+
+    __tablename__ = "deleted_meals"
+
+    # The meal's own id, so a restore brings back the very same meal
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    deleted_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    # The meal's columns and its items, as plain JSON
+    snapshot: Mapped[dict] = mapped_column(JSON, nullable=False)
+    voice: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
+
+
 class MealItem(UUIDMixin, Base):
     """An amount of a food inside a meal, with the food's numbers copied in."""
 

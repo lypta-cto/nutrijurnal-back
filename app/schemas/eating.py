@@ -3,6 +3,7 @@
 import uuid
 from datetime import date, datetime, time
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -109,6 +110,8 @@ class ItemWrite(BaseModel):
     # A plate with no food behind it, known only by its numbers — "a slice of
     # cake at the office, ~350 kcal". Per one serving; ignored when food_id is set.
     macros: MacrosWrite | None = None
+    # Where in the meal it goes — an Undo puts a removed line back in its place
+    position: int | None = Field(default=None, ge=0, le=100)
 
     def unit_or_default(self) -> str:
         return self.unit if self.unit in UNITS else "g"
@@ -308,6 +311,8 @@ class SettingsRead(BaseModel):
     profile: GoalProfile | None = None
     water_goal_ml: int = 2000
     water_glass_ml: int = 250
+    # IANA timezone the reminders run in; null until the browser says
+    timezone: str | None = None
     # How full the pantry and the recipe book are — the shared foods count too
     foods: int = 0
     recipes: int = 0
@@ -320,6 +325,19 @@ class SettingsPatch(BaseModel):
     target_fat: int | None = Field(default=None, ge=0, le=1000)
     water_goal_ml: int | None = Field(default=None, ge=250, le=10000)
     water_glass_ml: int | None = Field(default=None, ge=50, le=2000)
+    timezone: str | None = Field(default=None, max_length=64)
+
+    @field_validator("timezone")
+    @classmethod
+    def _a_real_timezone(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError) as error:
+            raise ValueError("Unknown timezone") from error
+        return value
+
     # True marks the first-run questions as answered (or skipped); it is never
     # unset, so sending false is simply ignored
     onboarded: bool | None = None

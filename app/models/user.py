@@ -86,6 +86,10 @@ class User(UUIDMixin, TimestampMixin, Base):
     water_goal_ml: Mapped[int | None] = mapped_column(Integer)
     water_glass_ml: Mapped[int | None] = mapped_column(Integer)
 
+    # IANA name ("Europe/Belgrade"), sent by the browser — reminders are set
+    # in the person's own clock, not the server's
+    timezone: Mapped[str | None] = mapped_column(String(64))
+
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",

@@ -5,6 +5,7 @@ Small maintenance commands.
     python -m app.cli seed      # load (or refresh) the shared foods
     python -m app.cli owner     # create the operator account from FIRST_SUPERUSER_*
     python -m app.cli secret    # print a SECRET_KEY you can paste into .env
+    python -m app.cli vapid     # print a VAPID key pair for the reminders' Web Push
 """
 
 import asyncio
@@ -68,6 +69,16 @@ def dev() -> None:
     )
 
 
+def vapid() -> None:
+    """A fresh key pair. The public half goes to every browser that
+    subscribes; replacing it later means everyone subscribes again."""
+    from app.services.push import new_vapid_keys
+
+    public, private = new_vapid_keys()
+    print(f"VAPID_PUBLIC_KEY={public}")
+    print(f"VAPID_PRIVATE_KEY={private}")
+
+
 def main() -> int:
     command = sys.argv[1] if len(sys.argv) > 1 else ""
 
@@ -79,6 +90,8 @@ def main() -> int:
         asyncio.run(owner())
     elif command == "secret":
         print(secrets.token_urlsafe(48))
+    elif command == "vapid":
+        vapid()
     else:
         print(__doc__)
         return 1

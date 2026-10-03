@@ -9,7 +9,7 @@ item carries the food's numbers as they were when it was eaten.
 
 import re
 import uuid
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, File, Form, HTTPException, Path, Query, UploadFile, status
@@ -18,7 +18,16 @@ from sqlalchemy import func, or_, select, update
 
 from app.api.deps import CurrentUser, SessionDep
 from app.api.routes import body
-from app.models.eating import UNITS, FavouriteFood, Food, Meal, MealItem, Recipe, RecipeItem
+from app.models.eating import (
+    UNITS,
+    DeletedMeal,
+    FavouriteFood,
+    Food,
+    Meal,
+    MealItem,
+    Recipe,
+    RecipeItem,
+)
 from app.schemas.eating import (
     DayCopy,
     DayRead,
@@ -237,6 +246,7 @@ async def read_settings(session: SessionDep, user: CurrentUser) -> SettingsRead:
         profile=goals.profile_of(user),
         water_goal_ml=body.water_goal(user),
         water_glass_ml=body.glass_size(user),
+        timezone=user.timezone,
         foods=foods,
         recipes=recipes,
     )
@@ -250,7 +260,7 @@ async def write_settings(
     for name in ("target_kcal", "target_protein", "target_carbs", "target_fat"):
         if name in fields:
             setattr(user, name, fields[name])
-    for name in ("water_goal_ml", "water_glass_ml"):
+    for name in ("water_goal_ml", "water_glass_ml", "timezone"):
         if fields.get(name):
             setattr(user, name, fields[name])
     if payload.profile is not None:
@@ -524,7 +534,11 @@ async def _meals_between(session, user, start: date, end: date) -> list[Meal]:
     rows = (
         await session.execute(
             select(Meal)
-            .where(Meal.user_id == user.id, Meal.day >= start, Meal.day <= end)
+            .where(
+                Meal.user_id == user.id,
+                Meal.day >= start,
+                Meal.day <= end,
+            )
             .order_by(Meal.day, Meal.at.nulls_last(), Meal.created_at)
         )
     ).scalars()
@@ -784,11 +798,98 @@ async def copy_day(
     return [_meal_read(meal) for meal in copies]
 
 
+MEAL_COLUMNS = ("day", "at", "title", "slot", "recipe_id", "recipe_title", "servings", "note")
+MEAL_VOICE_COLUMNS = ("voice_type", "voice_seconds", "voice_transcribed")
+ITEM_COLUMNS = (
+    "id",
+    "position",
+    "food_id",
+    "label",
+    "quantity",
+    "unit",
+    "grams",
+    "kcal100",
+    "protein100",
+    "carbs100",
+    "fat100",
+)
+
+
+def _plain(value):
+    """JSON keeps strings, so ids, dates and times travel as their ISO text."""
+    if isinstance(value, uuid.UUID):
+        return str(value)
+    if isinstance(value, date | time):
+        return value.isoformat()
+    return value
+
+
 @router.delete("/meals/{meal_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_meal(meal_id: uuid.UUID, session: SessionDep, user: CurrentUser) -> None:
+    """Gone from the diary at once — the meal and its items are deleted —
+    but a copy is kept for a day so the toast's Undo can bring it back."""
     meal = await _own_meal(session, user, meal_id)
+    await session.refresh(meal, attribute_names=["voice"])
+    snapshot = {name: _plain(getattr(meal, name)) for name in (*MEAL_COLUMNS, *MEAL_VOICE_COLUMNS)}
+    snapshot["items"] = [
+        {name: _plain(getattr(item, name)) for name in ITEM_COLUMNS} for item in meal.items
+    ]
+    existing = await session.get(DeletedMeal, meal.id)
+    if existing is not None:
+        await session.delete(existing)
+        await session.flush()
+    session.add(DeletedMeal(id=meal.id, user_id=user.id, snapshot=snapshot, voice=meal.voice))
     await session.delete(meal)
     await session.flush()
+
+
+@router.post("/meals/{meal_id}/restore", response_model=MealRead)
+async def restore_meal(meal_id: uuid.UUID, session: SessionDep, user: CurrentUser) -> MealRead:
+    """The Undo of a delete: the very same meal comes back, items, numbers
+    and recording as they were."""
+    kept = await session.get(DeletedMeal, meal_id)
+    if kept is None or kept.user_id != user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nothing to restore")
+    await session.refresh(kept, attribute_names=["voice"])
+    snapshot = kept.snapshot
+    recipe_id = uuid.UUID(snapshot["recipe_id"]) if snapshot.get("recipe_id") else None
+    # The recipe may have been deleted in between; the meal keeps its title
+    if recipe_id and await session.get(Recipe, recipe_id) is None:
+        recipe_id = None
+    rows = snapshot.get("items", [])
+    # A food deleted for good since then leaves its line, without the link
+    known = await _foods_by_id(
+        session, user, {uuid.UUID(row["food_id"]) for row in rows if row.get("food_id")}
+    )
+
+    def item_of(row: dict) -> MealItem:
+        food_id = uuid.UUID(row["food_id"]) if row.get("food_id") else None
+        return MealItem(
+            **{**row, "id": uuid.UUID(row["id"]), "food_id": food_id if food_id in known else None}
+        )
+
+    meal = Meal(
+        id=kept.id,
+        user_id=user.id,
+        day=date.fromisoformat(snapshot["day"]),
+        at=time.fromisoformat(snapshot["at"]) if snapshot.get("at") else None,
+        title=snapshot["title"],
+        slot=snapshot.get("slot") or "snack",
+        recipe_id=recipe_id,
+        recipe_title=snapshot.get("recipe_title"),
+        servings=snapshot.get("servings") or 1,
+        note=snapshot.get("note"),
+        voice=kept.voice,
+        voice_type=snapshot.get("voice_type"),
+        voice_seconds=snapshot.get("voice_seconds"),
+        voice_transcribed=bool(snapshot.get("voice_transcribed")),
+        items=[item_of(row) for row in rows],
+    )
+    await session.delete(kept)
+    await session.flush()
+    session.add(meal)
+    await session.flush()
+    return _meal_read(meal)
 
 
 # Two minutes of speech is a long description of a plate; anything past that is
@@ -877,11 +978,17 @@ async def add_item(
 ) -> MealRead:
     meal = await _own_meal(session, user, meal_id)
     foods = await _foods_by_id(session, user, {payload.food_id})
+    # An Undo puts a removed line back where it was; anything else goes last
+    position = len(meal.items)
+    if payload.position is not None and payload.position < len(meal.items):
+        position = payload.position
+        for item in meal.items:
+            if item.position >= position:
+                item.position += 1
     meal.items.append(
-        _build_item(
-            payload, foods.get(payload.food_id) if payload.food_id else None, len(meal.items)
-        )
+        _build_item(payload, foods.get(payload.food_id) if payload.food_id else None, position)
     )
+    meal.items.sort(key=lambda item: item.position)
     await session.flush()
     return _meal_read(meal)
 
