@@ -48,9 +48,9 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   and per email (`LOGIN_FAILURES_PER_EMAIL`, wrong passwords only), both over 15
   minutes; sign-up (`REGISTER_PER_HOUR`) and demos (`DEMO_PER_HOUR`) per address an
   hour. Past a limit: 429 with an English `detail` and `Retry-After`. The address is
-  the connection's peer; `X-Forwarded-For` (its last entry) only with
-  `TRUSTED_PROXY=true`, set only when every request comes through a proxy that
-  appends it. Use `client_address(request)` wherever an address is recorded; tests
+  the connection's peer; `X-Forwarded-For` only with `TRUSTED_PROXY=true`, set only
+  when every request comes through proxies that append to it — read
+  `TRUSTED_PROXY_HOPS` entries from the end (2 in production: Vercel, then Render). Use `client_address(request)` wherever an address is recorded; tests
   start from `rate_limit.reset()` (autouse in conftest).
 - **users** — admin-only CRUD kept from the template as operator tooling. Roles
   `viewer < member < admin < owner`; everyone who signs up is a member.
