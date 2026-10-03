@@ -68,11 +68,20 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   - Targets live on the user (`target_kcal/protein/carbs/fat`) with `onboarded_at`
     marking the first-run questions as done; `GET/PATCH /eating/settings` serves them.
   - `services/nutrition.py` reads written amounts ("1 merica whey", "malo putera",
-    "two eggs", "0,5 l mleka") into grams on five-letter Serbian stems. A comma between
-    two digits is a decimal; kilos and litres come back as grams and millilitres (the
-    diary keeps only `models.eating.UNITS`, and converts a posted `kg`/`l` the same
-    way). A food-less line (quick kcal, a stated-only recipe) is unit `serving`: 100 g a
-    serving at one serving's numbers. `slots.py` places a meal in
+    "two eggs", "0,5 l mleka", "piletina 200 g", "dvesta grama", "jedna i po banana")
+    into grams on five-letter Serbian stems. A comma between two digits is a decimal,
+    but three digits after a point or comma are thousands ("1.000 g") except in kg/l;
+    a number before "%" is part of the name. Kilos, litres, decilitres and dekagrams
+    (`SCALED_UNITS`) come back as grams and millilitres (the diary keeps only
+    `models.eating.UNITS`, and converts a posted `kg`/`l`/`dl`/`dag` the same way). A
+    portion ("porcija") is a piece, a glass of a drink, else 100 g. On a tie the food
+    named first wins ("kafa sa mlekom" is coffee). A food-less line (quick kcal, a
+    stated-only recipe) is unit `serving`: 100 g a serving at one serving's numbers.
+  - Every write that names a day (`DiaryDay` in `schemas/eating.py`: meals, moves,
+    copies, from-recipe, water, weight) refuses one more than a day past UTC's today
+    with a 422 — Today never opens a day that hasn't come. A food's portion weighs at
+    most `MAX_PORTION_GRAMS` (5000 g), and an Open Food Facts label past what a food
+    can hold is a miss. `slots.py` places a meal in
     breakfast/lunch/dinner/snack and reads the slot out of a sentence ("za ručak");
     `food_lookup.py` reads a barcode (zxing-cpp) and asks Open Food Facts;
     `eating_report.py` prints the PDF/CSV export; `eating_seed.py` loads the shared foods,
