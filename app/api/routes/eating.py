@@ -591,6 +591,14 @@ async def _own_meal(session, user, meal_id: uuid.UUID) -> Meal:
     return meal
 
 
+def _diary_amount(quantity: float, unit: str | None) -> tuple[float, str]:
+    """An amount as the diary keeps it. A kilo or a litre — what the parser
+    reads out of "1 kg piletine" — becomes grams or millilitres with its
+    quantity scaled, rather than falling back to a gram and keeping the 1."""
+    quantity, unit = nutrition.in_base_units(quantity, unit or "g")
+    return quantity, unit if unit in UNITS else "g"
+
+
 def _build_item(write: ItemWrite, food: Food | None, position: int) -> MealItem:
     if food is None and write.macros is not None:
         # Numbers with no food behind them: 100 g "of the plate" carries them,
@@ -608,14 +616,14 @@ def _build_item(write: ItemWrite, food: Food | None, position: int) -> MealItem:
             carbs100=write.macros.carbs,
             fat100=write.macros.fat,
         )
-    unit = write.unit_or_default()
+    quantity, unit = _diary_amount(write.quantity, write.unit)
     like = _as_food_like(food) if food else None
-    grams = nutrition.grams_for(like, write.quantity, unit)
+    grams = nutrition.grams_for(like, quantity, unit)
     return MealItem(
         position=position,
         food_id=food.id if food else None,
         label=(write.label or (food.name if food else "Item"))[:160],
-        quantity=write.quantity,
+        quantity=quantity,
         unit=unit,
         grams=grams,
         kcal100=food.kcal if food else 0,
@@ -1019,8 +1027,8 @@ async def update_item(
         item.label = fields["label"][:160]
     if "quantity" in fields and fields["quantity"] is not None:
         item.quantity = fields["quantity"]
-    if fields.get("unit") in UNITS:
-        item.unit = fields["unit"]
+    if fields.get("unit") in (*UNITS, *nutrition.SCALED_UNITS):
+        item.quantity, item.unit = _diary_amount(item.quantity, fields["unit"])
     food = (await _foods_by_id(session, user, {item.food_id})).get(item.food_id)
     item.grams = nutrition.grams_for(
         _as_food_like(food) if food else None, item.quantity, item.unit
@@ -1104,17 +1112,15 @@ async def _apply_items(session, user, recipe: Recipe, items: list) -> None:
     recipe.items = []
     for index, write in enumerate(items):
         food = foods.get(write.food_id) if write.food_id else None
-        unit = write.unit if write.unit in UNITS else "g"
+        quantity, unit = _diary_amount(write.quantity, write.unit)
         recipe.items.append(
             RecipeItem(
                 position=index,
                 food_id=food.id if food else None,
                 label=(write.label or (food.name if food else "Ingredient"))[:160],
-                quantity=write.quantity,
+                quantity=quantity,
                 unit=unit,
-                grams=nutrition.grams_for(
-                    _as_food_like(food) if food else None, write.quantity, unit
-                ),
+                grams=nutrition.grams_for(_as_food_like(food) if food else None, quantity, unit),
                 optional=write.optional,
             )
         )

@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.eating import UNITS
 from app.schemas.goals import GoalProfile
 
 # Where a meal sits in the day — the diary groups by it (services/slots.py)
@@ -112,9 +111,6 @@ class ItemWrite(BaseModel):
     macros: MacrosWrite | None = None
     # Where in the meal it goes — an Undo puts a removed line back in its place
     position: int | None = Field(default=None, ge=0, le=100)
-
-    def unit_or_default(self) -> str:
-        return self.unit if self.unit in UNITS else "g"
 
 
 class ItemPatch(BaseModel):

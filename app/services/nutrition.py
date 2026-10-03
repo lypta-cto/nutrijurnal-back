@@ -76,7 +76,6 @@ UNIT_WORDS: dict[str, str] = {
     "solja": "cup",
     "solje": "cup",
     "solju": "cup",
-    "caša": "cup",
     "casa": "cup",
     "porcija": "serving",
     "porcije": "serving",
@@ -161,7 +160,6 @@ WORD_QUANTITY: dict[str, float] = {
 VAGUE = {
     "malo": 0.5,
     "kap": 0.25,
-    "prstohvat": 1,
     "po zelji": 0.5,
     "po ukusu": 0.5,
     "a little": 0.5,
@@ -172,7 +170,9 @@ VAGUE = {
 
 FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 
-SPLIT = re.compile(r"[\n,;+]|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
+# A comma between two digits is the Serbian decimal comma ("0,5 l mleka",
+# "31,25 g") and stays inside its amount; every other comma separates foods
+SPLIT = re.compile(r"[\n;+]|(?<!\d),|,(?!\d)|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
 NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)\s*(?:/\s*(\d+))?")
 
 
@@ -213,6 +213,20 @@ class FoodLike:
     protein: float = 0
     carbs: float = 0
     fat: float = 0
+
+
+# A kilo and a litre are only bigger spellings of the base units. The diary
+# keeps amounts in the units every picker knows, so "1 kg piletine" is written
+# down as 1000 g — never as 1 of a unit the diary would read as a gram.
+SCALED_UNITS: dict[str, tuple[str, float]] = {"kg": ("g", 1000), "l": ("ml", 1000)}
+
+
+def in_base_units(quantity: float, unit: str) -> tuple[float, str]:
+    """ "1.5 kg" → 1500 g, "0.5 l" → 500 ml; every other amount as it was."""
+    if unit in SCALED_UNITS:
+        base, factor = SCALED_UNITS[unit]
+        return round(quantity * factor, 2), base
+    return quantity, unit
 
 
 def grams_for(food: FoodLike | None, quantity: float, unit: str) -> float:
@@ -273,7 +287,6 @@ def read_amount(text: str) -> Amount:
     if not rest:
         return Amount(0, "g", "")
 
-    vague = False
     for word, share in VAGUE.items():
         if rest.startswith(word + " "):
             rest = rest[len(word) :].strip()
@@ -318,7 +331,7 @@ def read_amount(text: str) -> Amount:
     if unit == "serving":
         unit = "piece"
     rest = re.sub(r"^(?:(?:od|sa|of|a|an|the)\s+)+", "", rest).strip(" ().")
-    return Amount(quantity, unit, rest, vague=vague)
+    return Amount(quantity, unit, rest)
 
 
 def match_food(name: str, foods: list[FoodLike]) -> FoodLike | None:
@@ -373,15 +386,15 @@ def resolve(text: str, foods: list[FoodLike]) -> Resolved:
     if food is not None:
         known_units = food.units if isinstance(food.units, dict) else {}
         if unit == "piece" and "piece" not in known_units:
-            # Nobody eats "one oats" — an uncounted staple means a helping
-            unit = "handful" if food.base_unit == "g" else "ml"
-        if unit == "tbsp" and amount.vague and "tbsp" not in known_units:
-            unit = "tbsp"
-    grams = grams_for(food, amount.quantity, unit)
+            # Nobody eats "one oats" — an uncounted staple means a helping,
+            # and one of a drink ("1 jogurt", "1 pivo") is a glass of it
+            unit = "handful" if food.base_unit == "g" else "cup"
+    quantity, unit = in_base_units(amount.quantity, unit)
+    grams = grams_for(food, quantity, unit)
     label = food.name if food is not None else (amount.name or text.strip())
     return Resolved(
         label=label,
-        quantity=amount.quantity,
+        quantity=quantity,
         unit=unit,
         grams=grams,
         food=food,

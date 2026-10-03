@@ -78,16 +78,9 @@ def test_a_vague_amount_is_a_small_spoonful():
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py read_amount(): 'prstohvat' is in VAGUE (checked first, "
-        "always answers 'tbsp') as well as in UNIT_WORDS ('pinch'), so 'prstohvat cimeta' "
-        "becomes 1 tablespoon (15 g, 37 kcal) instead of a pinch (0.5 g) — the spices' own "
-        "'pinch' units in the seed are never reached"
-    ),
-)
 def test_a_pinch_is_a_pinch():
+    """ "prstohvat" is a unit, not a vague spoonful: a pinch of cinnamon is
+    the half gram the seed says, not a 15 g tablespoon."""
     amount = read_amount("prstohvat cimeta")
 
     assert (amount.quantity, amount.unit) == (1, "pinch")
@@ -122,19 +115,14 @@ def test_a_line_is_split_into_things_eaten(text, chunks):
     assert nutrition.split_text(text) == chunks
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py SPLIT treats every comma as a separator, so the "
-        "Serbian decimal comma breaks an amount apart: '31,25 g ovsenih' becomes '31' "
-        "(unknown) + 25 g, and '0,5 l mleka' becomes 5 l (5000 ml) of milk"
-    ),
-)
 @pytest.mark.parametrize(
     ("text", "chunks"),
     [
         ("31,25 g ovsenih", ["31,25 g ovsenih"]),
         ("0,5 l mleka, 1 banana", ["0,5 l mleka", "1 banana"]),
+        # Only a comma between two digits is a decimal; one after a word separates
+        ("2 jaja,1 banana", ["2 jaja", "1 banana"]),
+        ("50 g ovsenih,1,5 kašika meda", ["50 g ovsenih", "1,5 kašika meda"]),
     ],
 )
 def test_a_decimal_comma_is_not_a_separator(text, chunks):
@@ -257,20 +245,13 @@ async def test_ones_own_foods_are_read_too_until_archived(client: AsyncClient, m
     assert "Bakina granola" not in labels
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py split_text(): the decimal comma is split off (see "
-        "test_a_decimal_comma_is_not_a_separator), so /eating/parse returns 25 g of oats plus "
-        "an unknown '31', and '0,5 l mleka' as 5000 ml"
-    ),
-)
 @pytest.mark.parametrize(
     ("text", "rows"),
     [
         ("31,25 g ovsenih", [("Ovsene pahuljice", "g", 31.25)]),
         ("1,5 kašika meda", [("Med", "tbsp", 31.5)]),
-        ("0,5 l mleka", [("Mleko 2.8%", "l", 500)]),
+        # A litre is handed back as millilitres, the unit the diary keeps
+        ("0,5 l mleka", [("Mleko 2.8%", "ml", 500)]),
     ],
 )
 async def test_a_decimal_comma_reads_as_a_decimal(client: AsyncClient, me, text, rows):
@@ -280,19 +261,12 @@ async def test_a_decimal_comma_reads_as_a_decimal(client: AsyncClient, me, text,
     assert _rows(parsed) == rows
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG units out of step: nutrition.read_amount() answers 'kg' and 'l', /eating/parse "
-        "returns them as the unit, but they are not in models.eating.UNITS, so POST "
-        "/eating/meals (ItemWrite.unit_or_default) and recipe items fall back to 'g' and keep "
-        "the quantity — '1 kg piletine' is parsed as 1000 g and saved as 1 g. The Today page "
-        "(pages/index.vue addLine) posts parsed quantity+unit exactly like this"
-    ),
-)
 async def test_a_parsed_amount_is_saved_as_parsed(client: AsyncClient, me):
+    """The parser hands kilos and litres back as grams and millilitres, so
+    whatever the page posts of its answer is saved at the same weight."""
     parsed = await _parse(client, me, "1 kg piletine, 0.5 l mleka")
-    assert _rows(parsed) == [("Pileći file", "kg", 1000), ("Mleko 2.8%", "l", 500)]
+    assert _rows(parsed) == [("Pileći file", "g", 1000), ("Mleko 2.8%", "ml", 500)]
+    assert [item["quantity"] for item in parsed["items"]] == [1000, 500]
 
     saved = await meal(
         client,
@@ -308,15 +282,35 @@ async def test_a_parsed_amount_is_saved_as_parsed(client: AsyncClient, me):
     assert saved["kcal"] == round(sum(item["kcal"] for item in parsed["items"]), 1)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py resolve(): a bare count of a food with no 'piece' unit "
-        "becomes a helping, but for a millilitre food the helping is unit 'ml', so '1 jogurt' "
-        "or '1 pivo' is read as 1 ml (0.6 kcal / 0.4 kcal) instead of a cup of it"
-    ),
-)
 async def test_one_of_a_drink_is_a_helping_not_a_drop(client: AsyncClient, me):
     for text in ("1 jogurt", "1 pivo"):
         [item] = (await _parse(client, me, text))["items"]
         assert item["grams"] >= 100, text
+
+
+async def test_a_kilo_or_a_litre_posted_as_such_is_kept_at_its_weight(client: AsyncClient, me):
+    """An older page (or any client) may still post the unit it read — the
+    diary and the recipe book scale it instead of reading "1 kg" as 1 g."""
+    chicken = (await _parse(client, me, "piletina"))["items"][0]["food_id"]
+
+    saved = await meal(
+        client, me, "2026-09-21", {"food_id": chicken, "quantity": 1.5, "unit": "kg"}
+    )
+    [item] = saved["items"]
+    assert (item["quantity"], item["unit"], item["grams"]) == (1500, "g", 1500)
+
+    edited = await client.patch(
+        f"{PREFIX}/eating/meals/{saved['id']}/items/{item['id']}",
+        json={"quantity": 0.25, "unit": "kg"},
+        headers=me,
+    )
+    [item] = edited.json()["items"]
+    assert (item["quantity"], item["unit"], item["grams"]) == (250, "g", 250)
+
+    recipe = await client.post(
+        f"{PREFIX}/eating/recipes",
+        json={"title": "Supa", "items": [{"label": "Voda", "quantity": 1, "unit": "l"}]},
+        headers=me,
+    )
+    [line] = recipe.json()["items"]
+    assert (line["quantity"], line["unit"], line["grams"]) == (1000, "ml", 1000)
