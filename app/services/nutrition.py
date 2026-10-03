@@ -45,6 +45,13 @@ UNIT_WORDS: dict[str, str] = {
     "l": "l",
     "litar": "l",
     "litara": "l",
+    # A glass of milk, juice or yogurt is said in decilitres
+    "dl": "dl",
+    "dcl": "dl",
+    "decilitar": "dl",
+    "decilitra": "dl",
+    "decilitre": "dl",
+    "decilitara": "dl",
     "kom": "piece",
     "komad": "piece",
     "komada": "piece",
@@ -91,6 +98,9 @@ UNIT_WORDS: dict[str, str] = {
     "litres": "l",
     "liter": "l",
     "liters": "l",
+    "decilitres": "dl",
+    "deciliter": "dl",
+    "deciliters": "dl",
     "piece": "piece",
     "pieces": "piece",
     "pcs": "piece",
@@ -215,10 +225,14 @@ class FoodLike:
     fat: float = 0
 
 
-# A kilo and a litre are only bigger spellings of the base units. The diary
-# keeps amounts in the units every picker knows, so "1 kg piletine" is written
-# down as 1000 g — never as 1 of a unit the diary would read as a gram.
-SCALED_UNITS: dict[str, tuple[str, float]] = {"kg": ("g", 1000), "l": ("ml", 1000)}
+# A kilo, a litre and a decilitre are only other spellings of the base units.
+# The diary keeps amounts in the units every picker knows, so "1 kg piletine"
+# is written down as 1000 g — never as 1 of a unit the diary would read as a gram.
+SCALED_UNITS: dict[str, tuple[str, float]] = {
+    "kg": ("g", 1000),
+    "l": ("ml", 1000),
+    "dl": ("ml", 100),
+}
 
 
 def in_base_units(quantity: float, unit: str) -> tuple[float, str]:
@@ -234,10 +248,8 @@ def grams_for(food: FoodLike | None, quantity: float, unit: str) -> float:
     unit = unit or "g"
     if unit in ("g", "ml"):
         return round(quantity, 2)
-    if unit == "kg":
-        return round(quantity * 1000, 2)
-    if unit == "l":
-        return round(quantity * 1000, 2)
+    if unit in SCALED_UNITS:
+        return round(quantity * SCALED_UNITS[unit][1], 2)
     per_unit = None
     if food is not None and isinstance(food.units, dict):
         value = food.units.get(unit)
@@ -320,7 +332,7 @@ def read_amount(text: str) -> Amount:
             rest = rest[len(rest.split(" ")[0]) :].strip()
         else:
             # "50g" written without a space
-            glued = re.match(r"^(g|gr|ml|kg|l)\b", head)
+            glued = re.match(r"^(g|gr|ml|kg|dl|l)\b", head)
             if glued and quantity is not None:
                 unit = UNIT_WORDS.get(glued.group(1), "g")
                 rest = rest[len(glued.group(1)) :].strip()

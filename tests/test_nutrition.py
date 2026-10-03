@@ -92,6 +92,7 @@ def test_grams_come_from_the_foods_own_units_first():
     assert grams_for(egg, 2, "piece") == 110
     assert grams_for(egg, 2, "g") == 2 and grams_for(egg, 250, "ml") == 250
     assert grams_for(egg, 1.5, "kg") == 1500 and grams_for(egg, 0.33, "l") == 330
+    assert grams_for(egg, 2, "dl") == 200
     # A unit the food does not know (or knows as zero) falls back to the default
     assert grams_for(egg, 2, "tbsp") == 30 and grams_for(egg, 1, "slice") == 30
     assert grams_for(None, 1, "cup") == 240
@@ -365,25 +366,24 @@ async def test_a_unit_changed_on_its_own_keeps_the_amount_it_was(client: AsyncCl
     assert (item["quantity"], item["unit"], item["grams"]) == (200, "ml", 200)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py UNIT_WORDS has no decilitre: 'dl', 'dcl' and "
-        "'decilitra' — how a glass of milk, juice or yogurt is said in Serbian — fall through "
-        "to a count, and a count of a drink is a 250 ml glass, so '2 dl mleka' is 500 ml "
-        "(2.5x) and '3 dl vode' 750 ml"
-    ),
-)
 @pytest.mark.parametrize(
     ("text", "rows"),
     [
+        # How a glass of milk, juice or yogurt is said in Serbian
         ("2 dl mleka", [("Mleko 2.8%", "ml", 200)]),
         ("1 dl jogurta", [("Jogurt", "ml", 100)]),
         ("3 decilitra mleka", [("Mleko 2.8%", "ml", 300)]),
+        ("2dl mleka", [("Mleko 2.8%", "ml", 200)]),
+        ("1,5 dcl jogurta", [("Jogurt", "ml", 150)]),
     ],
 )
 async def test_a_decilitre_is_a_tenth_of_a_litre(client: AsyncClient, me, text, rows):
-    assert _rows(await _parse(client, me, text)) == rows
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
+    # Handed back in millilitres, the unit the diary keeps
+    assert [item["quantity"] for item in parsed["items"]] == [row[2] for row in rows]
 
 
 @pytest.mark.xfail(
