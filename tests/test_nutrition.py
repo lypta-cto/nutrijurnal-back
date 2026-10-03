@@ -218,6 +218,21 @@ async def test_sugar_is_not_sweetcorn_when_spelled_as_sugar(client: AsyncClient,
     assert _rows(await _parse(client, me, "100 g šećerca")) == [("Kukuruz šećerac", "g", 100)]
 
 
+@pytest.mark.parametrize(
+    ("text", "rows"),
+    [
+        ("kafa sa mlekom", [("Kafa", "cup", 200)]),
+        ("coffee with milk", [("Kafa", "cup", 200)]),
+        ("mleko sa kafom", [("Mleko 2.8%", "cup", 250)]),
+        ("ovsene pahuljice sa bananom", [("Ovsene pahuljice", "handful", 30)]),
+    ],
+)
+async def test_what_is_eaten_with_something_is_the_first_named(client: AsyncClient, me, text, rows):
+    """ "kafa sa mlekom" names coffee and milk equally well; the dish is the
+    one named first, the rest is what went into it."""
+    assert _rows(await _parse(client, me, text)) == rows
+
+
 async def test_a_whole_meal_in_one_line_with_its_numbers(client: AsyncClient, me):
     parsed = await _parse(client, me, "50g ovsenih, 1 merica whey, 1 banana i 2 jaja")
 

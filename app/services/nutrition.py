@@ -501,7 +501,7 @@ def match_food(name: str, foods: list[FoodLike]) -> FoodLike | None:
     if not wanted:
         return None
     spelled = set(written)
-    best, best_score = None, 0.0
+    best, best_rank = None, (0.0, 0)
     for food in foods:
         for alias in food.search_key.split("|"):
             words = [word for word in re.findall(r"[a-z0-9]+", alias) if len(word) > 2]
@@ -518,9 +518,13 @@ def match_food(name: str, foods: list[FoodLike]) -> FoodLike | None:
             # Every word of the alias matched is worth more than a long
             # alias that only brushed the text
             score = hits / len(tokens) + hits / max(len(wanted), 1) + 0.01 * hits + 0.02 * same
-            if score > best_score:
-                best, best_score = food, score
-    return best if best_score >= 1.0 else None
+            # Of two foods named equally well, the one written first is what
+            # was eaten: "kafa sa mlekom" is coffee with milk in it, not milk
+            first = min(wanted.index(token) for token in tokens if token in wanted)
+            rank = (score, -first)
+            if rank > best_rank:
+                best, best_rank = food, rank
+    return best if best_rank[0] >= 1.0 else None
 
 
 @dataclass
