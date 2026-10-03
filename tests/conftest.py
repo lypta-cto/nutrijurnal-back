@@ -20,6 +20,13 @@ os.environ["COOKIE_SECURE"] = "false"
 os.environ["COOKIE_SAMESITE"] = "lax"
 os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "15"
 os.environ["REFRESH_TOKEN_EXPIRE_DAYS"] = "30"
+# Push stays off unless a test hands the server keys, and the demo keeps its
+# shipped limits — a developer's VAPID pair or demo tuning must not leak in
+os.environ["VAPID_PUBLIC_KEY"] = ""
+os.environ["VAPID_PRIVATE_KEY"] = ""
+os.environ["DEMO_ENABLED"] = "true"
+os.environ["DEMO_TTL_DAYS"] = "3"
+os.environ["DEMO_PER_HOUR"] = "10"
 
 import httpx  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
