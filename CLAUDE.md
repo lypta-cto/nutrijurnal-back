@@ -59,7 +59,11 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   - Targets live on the user (`target_kcal/protein/carbs/fat`) with `onboarded_at`
     marking the first-run questions as done; `GET/PATCH /eating/settings` serves them.
   - `services/nutrition.py` reads written amounts ("1 merica whey", "malo putera",
-    "two eggs") into grams on five-letter Serbian stems; `slots.py` places a meal in
+    "two eggs", "0,5 l mleka") into grams on five-letter Serbian stems. A comma between
+    two digits is a decimal; kilos and litres come back as grams and millilitres (the
+    diary keeps only `models.eating.UNITS`, and converts a posted `kg`/`l` the same
+    way). A food-less line (quick kcal, a stated-only recipe) is unit `serving`: 100 g a
+    serving at one serving's numbers. `slots.py` places a meal in
     breakfast/lunch/dinner/snack and reads the slot out of a sentence ("za ručak");
     `food_lookup.py` reads a barcode (zxing-cpp) and asks Open Food Facts;
     `eating_report.py` prints the PDF/CSV export; `eating_seed.py` loads the shared foods,
@@ -88,7 +92,10 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   read-only; foods a person creates or scans are private to them. New user-owned
   tables get `user_id` with `ondelete="CASCADE"` and a cross-user 404 test.
 - Every user-visible string — API error `detail`s included — is English. Food names are
-  data and stay Serbian.
+  data and stay Serbian. A database error never shows its cause: a broken constraint is
+  a 409, an outage a 503 (the docker hint only when `ENVIRONMENT=local`).
+- Uploads are read only up to their limit (`read(MAX + 1)`), images are sized from their
+  header before decoding, and decoding runs in `asyncio.to_thread`.
 - No cookbook or meal-plan recipes are ever seeded: those are third-party copyrighted or
   personal. Only `foods_seed.json` (generic per-100 g values) ships.
 - Never read, print or copy any `.env`; `.env.example` is the reference. Never configure
