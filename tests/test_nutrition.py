@@ -386,26 +386,23 @@ async def test_a_decilitre_is_a_tenth_of_a_litre(client: AsyncClient, me, text, 
     assert [item["quantity"] for item in parsed["items"]] == [row[2] for row in rows]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py UNIT_WORDS knows 'litar'/'litara' and the English "
-        "'kilo', but not the case endings Serbian puts on them after a number or a verb: "
-        "'2 litra vode' is two 250 ml glasses (500 ml), 'litru mleka' one glass, "
-        "'pola kile piletine' half a piece (75 g) and '1 kila jabuka' one apple (180 g)"
-    ),
-)
 @pytest.mark.parametrize(
     ("text", "rows"),
     [
+        # The endings Serbian puts on them after a number or a verb
         ("2 litra vode", [("Voda", "ml", 2000)]),
         ("litru mleka", [("Mleko 2.8%", "ml", 1000)]),
         ("pola kile piletine", [("Pileći file", "g", 500)]),
         ("1 kila jabuka", [("Jabuka", "g", 1000)]),
+        ("dva kilograma krompira", [("Krompir", "g", 2000)]),
+        ("250 mililitara mleka", [("Mleko 2.8%", "ml", 250)]),
     ],
 )
 async def test_litres_and_kilos_with_any_case_ending(client: AsyncClient, me, text, rows):
-    assert _rows(await _parse(client, me, text)) == rows
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
 
 
 @pytest.mark.xfail(
