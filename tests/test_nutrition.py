@@ -408,25 +408,40 @@ async def test_litres_and_kilos_with_any_case_ending(client: AsyncClient, me, te
     assert _rows(parsed) == rows
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "BUG app/services/nutrition.py read_amount() only reads an amount off the FRONT of a "
-        "line; a list typed as 'piletina 200 g' or 'chicken 250g' — the way a label or a "
-        "plan writes it — is one piece of the food (150 g of chicken, a 250 ml glass of "
-        "yogurt) and the number written is ignored"
-    ),
-)
 @pytest.mark.parametrize(
     ("text", "rows"),
     [
+        # The way a label or a plan lists it
         ("piletina 200 g", [("Pileći file", "g", 200)]),
         ("jogurt 200 ml", [("Jogurt", "ml", 200)]),
         ("chicken 250g", [("Pileći file", "g", 250)]),
+        ("ovsene pahuljice 50g", [("Ovsene pahuljice", "g", 50)]),
+        ("mleko 0,5 l", [("Mleko 2.8%", "ml", 500)]),
+        ("whey 2 merice", [("Whey protein", "scoop", 60)]),
+        # A number inside the name stays there; the one at the end is the amount
+        ("3,5% mleko 200 ml", [("Mleko 2.8%", "ml", 200)]),
     ],
 )
 async def test_an_amount_written_after_the_food(client: AsyncClient, me, text, rows):
-    assert _rows(await _parse(client, me, text)) == rows
+    parsed = await _parse(client, me, text)
+
+    assert parsed["unknown"] == []
+    assert _rows(parsed) == rows
+
+
+@pytest.mark.parametrize(
+    ("written", "name"),
+    [
+        # Without a unit, a number at the end is as often part of the name
+        ("mleko 1.6", "mleko 1.6"),
+        ("cokolada 75", "cokolada 75"),
+        ("zacin 4 vrste sira", "zacin 4 vrste sira"),
+    ],
+)
+def test_a_number_at_the_end_without_a_unit_stays_in_the_name(written, name):
+    amount = read_amount(written)
+
+    assert (amount.quantity, amount.unit, amount.name) == (1, "piece", name)
 
 
 @pytest.mark.xfail(

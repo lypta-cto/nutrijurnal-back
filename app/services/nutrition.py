@@ -199,6 +199,10 @@ FRACTIONS = {"½": 0.5, "¼": 0.25, "¾": 0.75, "⅓": 1 / 3, "⅔": 2 / 3}
 SPLIT = re.compile(r"[\n;+]|(?<!\d),|,(?!\d)|(?:\s+\bi\b\s+)|(?:\s+\band\b\s+)")
 # A number followed by "%" is part of the name ("3,5% mleko"), not an amount
 NUMBER = re.compile(r"^\s*(\d+(?:[.,]\d+)?)(?![\d.,]*\s*%)\s*(?:/\s*(\d+))?")
+# An amount after the food, the way a label or a plan lists it: "piletina
+# 200 g", "chicken 250g". Only with its unit — a bare number at the end is as
+# often part of the name ("Mleko 1.6") as an amount
+TRAILING = re.compile(r"\s(\d+(?:[.,]\d+)?)\s*(?:/\s*(\d+))?\s*([a-z]+)$")
 
 
 def strip_accents(text: str) -> str:
@@ -307,9 +311,18 @@ class Amount:
     vague: bool = False
 
 
+def _number(written: str, divisor: str | None = None) -> float:
+    """ "31,25" → 31.25 · "1/2" → 0.5 (a zero under the line is ignored)."""
+    quantity = float(written.replace(",", "."))
+    if divisor and float(divisor):
+        quantity /= float(divisor)
+    return quantity
+
+
 def read_amount(text: str) -> Amount:
     """ "50g ovsenih" → 50 g ovsenih · "1 merica whey" → 1 scoop whey ·
-    "malo putera" → half a spoon of it · "banana" → one of them."""
+    "malo putera" → half a spoon of it · "banana" → one of them ·
+    "piletina 200 g" → 200 g piletina."""
     rest = normalize(text).strip(" .-")
     if not rest:
         return Amount(0, "g", "")
@@ -327,10 +340,7 @@ def read_amount(text: str) -> Amount:
     if quantity is None:
         match = NUMBER.match(rest)
         if match:
-            quantity = float(match.group(1).replace(",", "."))
-            if match.group(2):  # "1/2"
-                divisor = float(match.group(2))
-                quantity = quantity / divisor if divisor else quantity
+            quantity = _number(match.group(1), match.group(2))
             rest = rest[match.end() :].strip()
     if quantity is None:
         first = rest.split(" ")[0] if rest else ""
@@ -351,6 +361,12 @@ def read_amount(text: str) -> Amount:
             if glued and quantity is not None:
                 unit = UNIT_WORDS.get(glued.group(1), "g")
                 rest = rest[len(glued.group(1)) :].strip()
+    if quantity is None and not unit:
+        trailing = TRAILING.search(rest)
+        if trailing and trailing.group(3) in UNIT_WORDS:
+            quantity = _number(trailing.group(1), trailing.group(2))
+            unit = UNIT_WORDS[trailing.group(3)]
+            rest = rest[: trailing.start()].strip()
     if quantity is None:
         quantity = 1.0
     if not unit:
