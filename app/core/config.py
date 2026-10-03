@@ -29,6 +29,21 @@ class Settings(BaseSettings):
     # Neon: postgresql+asyncpg://user:pass@ep-xxx.region.aws.neon.tech/dbname
     DATABASE_URL: PostgresDsn
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _asyncpg_driver(cls, value: object) -> object:
+        """Hosts hand out plain postgres:// strings — Supabase's Connect
+        dialog, Render, Neon — and the app only speaks asyncpg, which also
+        calls libpq's `sslmode` plain `ssl`. Pasted as given, it still works."""
+        if not isinstance(value, str):
+            return value
+        url = value.strip()
+        for prefix in ("postgres://", "postgresql://"):
+            if url.startswith(prefix):
+                url = "postgresql+asyncpg://" + url.removeprefix(prefix)
+                break
+        return url.replace("sslmode=", "ssl=")
+
     # --- Security ------------------------------------------------------------
     # Generate with: python -c "import secrets; print(secrets.token_urlsafe(48))"
     SECRET_KEY: str = Field(min_length=32)
@@ -73,10 +88,15 @@ class Settings(BaseSettings):
     LOGIN_PER_ADDRESS: int = 30
     LOGIN_FAILURES_PER_EMAIL: int = 10
     REGISTER_PER_HOUR: int = 10
-    # True only when the API is reached solely through a reverse proxy that
-    # appends the client's address to X-Forwarded-For: the last entry is then
-    # who is asking. Left false the header is ignored — anyone can write it.
+    # True only when the API is reached solely through reverse proxies that
+    # each append the address they were reached from to X-Forwarded-For.
+    # Left false the header is ignored — anyone can write it.
     TRUSTED_PROXY: bool = False
+    # How many of those proxies stand in front. The client is that many
+    # entries from the end: one behind a plain balancer, two in production,
+    # where Vercel's rewrite reaches Render's balancer — read the last entry
+    # there and every visitor is "Vercel", sharing one sign-in budget.
+    TRUSTED_PROXY_HOPS: int = Field(default=1, ge=1, le=5)
 
     # --- Google OAuth --------------------------------------------------------
     # Create at https://console.cloud.google.com/apis/credentials

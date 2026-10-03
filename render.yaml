@@ -1,0 +1,86 @@
+# Render blueprint for the Nutrijurnal API.
+#
+# Render → New → Blueprint → this repo. Secrets are `sync: false` on purpose:
+# Render asks for them once while creating the service and stores them
+# itself, so nothing sensitive is ever committed here.
+#
+# The database is Supabase Postgres, not a Render one. The app talks to it as
+# plain Postgres through SQLAlchemy — Supabase's own client libraries, URL and
+# publishable key are not used.
+
+services:
+  - type: web
+    name: nutrijurnal-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    # Next to the Supabase project (eu-central-1 is Frankfurt) — every query
+    # pays the round trip. A service's region cannot be changed later.
+    region: frankfurt
+    # Not free: a free service sleeps after 15 idle minutes, and the reminder
+    # loop sleeps with it, so nobody's lunch reminder would ever arrive.
+    plan: starter
+    branch: main
+
+    # Reports the database too, so a red deploy says which half is broken
+    healthCheckPath: /health
+
+    # Profile photos. Without a disk they live on the container filesystem
+    # and every deploy silently deletes them.
+    disk:
+      name: uploads
+      mountPath: /var/data
+      sizeGB: 1
+
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+
+      # Absolute, because the disk is mounted outside the working directory
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+
+      # The refresh cookie is first-party: Vercel rewrites /api/* to this
+      # service, so the browser only ever sees one origin. Lax is therefore
+      # enough — and Lax is what Safari doesn't quietly discard.
+      - key: COOKIE_SECURE
+        value: true
+      - key: COOKIE_SAMESITE
+        value: lax
+
+      # Every request arrives through Vercel's rewrite and then Render's
+      # balancer, each adding an address: the visitor is second from the end.
+      - key: TRUSTED_PROXY
+        value: true
+      - key: TRUSTED_PROXY_HOPS
+        value: 2
+
+      # Supabase → Connect → "Session pooler" string, with the database
+      # password filled in. Pasted as it comes (postgresql://…:5432/postgres);
+      # the app switches the driver itself. Not the "Direct connection": that
+      # one is IPv6-only and Render cannot reach it. Not the transaction
+      # pooler on 6543 either — asyncpg's prepared statements need a session.
+      - key: DATABASE_URL
+        sync: false
+      # Render makes one up and keeps it; changing it signs everyone out
+      - key: SECRET_KEY
+        generateValue: true
+
+      # Reminders: `python -m app.cli vapid` prints a matching pair. Replacing
+      # the pair later makes everyone switch reminders on again.
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+
+      # The Vercel address. Links, CORS and the push sender's contact all use
+      # it; change all four together when the real domain arrives.
+      - key: FRONTEND_URL
+        value: https://nutrijurnal.vercel.app
+      - key: CORS_ORIGINS
+        value: https://nutrijurnal.vercel.app
+      - key: BACKEND_URL
+        value: https://nutrijurnal.vercel.app
+      - key: VAPID_SUBJECT
+        value: https://nutrijurnal.vercel.app

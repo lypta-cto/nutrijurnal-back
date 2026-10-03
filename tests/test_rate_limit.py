@@ -114,3 +114,32 @@ async def test_a_forwarded_address_is_believed_only_behind_a_trusted_proxy(
     again = await _sign_in(client, "proxied@example.com", **{"X-Forwarded-For": "8.8.8.8, 3.3.3.3"})
     elsewhere = await _sign_in(client, "proxied@example.com", **{"X-Forwarded-For": "4.4.4.4"})
     assert (first.status_code, again.status_code, elsewhere.status_code) == (200, 429, 200)
+
+
+async def test_behind_two_proxies_the_client_is_second_from_the_end(
+    client: AsyncClient, monkeypatch
+):
+    """Production is Vercel's rewrite in front of Render's balancer: Vercel
+    writes the visitor, Render appends Vercel. Read the last entry there and
+    every visitor shares Vercel's one sign-in budget."""
+    monkeypatch.setattr(settings, "LOGIN_PER_ADDRESS", 1)
+    monkeypatch.setattr(settings, "TRUSTED_PROXY", True)
+    monkeypatch.setattr(settings, "TRUSTED_PROXY_HOPS", 2)
+    await sign_up(client, "twohops@example.com")
+
+    alice = await _sign_in(
+        client, "twohops@example.com", **{"X-Forwarded-For": "5.5.5.5, 76.76.21.1"}
+    )
+    bob = await _sign_in(
+        client, "twohops@example.com", **{"X-Forwarded-For": "6.6.6.6, 76.76.21.1"}
+    )
+    alice_again = await _sign_in(
+        client, "twohops@example.com", **{"X-Forwarded-For": "5.5.5.5, 76.76.21.1"}
+    )
+    assert (alice.status_code, bob.status_code, alice_again.status_code) == (200, 200, 429)
+
+    # A shorter chain than expected still names someone: its first entry
+    rate_limit.reset()
+    lone = await _sign_in(client, "twohops@example.com", **{"X-Forwarded-For": "7.7.7.7"})
+    lone_again = await _sign_in(client, "twohops@example.com", **{"X-Forwarded-For": "7.7.7.7"})
+    assert (lone.status_code, lone_again.status_code) == (200, 429)

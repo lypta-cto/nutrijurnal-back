@@ -39,6 +39,38 @@ def do_run_migrations(connection: Connection) -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+        close_the_data_api(connection)
+
+
+def close_the_data_api(connection: Connection) -> None:
+    """Row-level security on, with no policies, for every table in public.
+
+    Supabase serves the public schema through its Data API to anyone holding
+    the project's publishable key, which is public by design — and tables
+    Alembic creates have row-level security off, so every row (password
+    hashes included) would be one HTTP call away. With it on and no policy,
+    that API sees nothing. The app is unaffected: it connects as the tables'
+    owner, whom row-level security does not restrict. Done after every
+    upgrade, so a table added later is covered without anyone remembering.
+    Harmless on a plain Postgres.
+    """
+    if connection.dialect.name != "postgresql":
+        return
+    connection.exec_driver_sql(
+        """
+        DO $$
+        DECLARE t record;
+        BEGIN
+          FOR t IN
+            SELECT c.relname FROM pg_class c
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity
+          LOOP
+            EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t.relname);
+          END LOOP;
+        END $$;
+        """
+    )
 
 
 async def run_async_migrations() -> None:

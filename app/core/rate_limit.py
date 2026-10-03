@@ -89,12 +89,14 @@ def reset() -> None:
 
 
 def client_address(request: Request) -> str:
-    """Who is asking. Behind the reverse proxy TRUSTED_PROXY vouches for, it
-    is the last address in X-Forwarded-For — the one that proxy added; every
-    entry before it the client could have written itself. Without a trusted
-    proxy the header is ignored, or anyone could pick a fresh address per try."""
+    """Who is asking. Behind the reverse proxies TRUSTED_PROXY vouches for,
+    it is the address the first of them added: TRUSTED_PROXY_HOPS entries
+    from the end of X-Forwarded-For. Every entry before it the client could
+    have written itself. Without a trusted proxy the header is ignored, or
+    anyone could pick a fresh address per try."""
     if settings.TRUSTED_PROXY:
-        hops = [hop.strip() for hop in request.headers.get("x-forwarded-for", "").split(",")]
-        if hops[-1]:
-            return hops[-1]
+        raw = request.headers.get("x-forwarded-for", "")
+        hops = [hop.strip() for hop in raw.split(",") if hop.strip()]
+        if hops:
+            return hops[-min(settings.TRUSTED_PROXY_HOPS, len(hops))]
     return request.client.host if request.client else "unknown"

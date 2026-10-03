@@ -118,6 +118,12 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   personal. Only `foods_seed.json` (generic per-100 g values) ships.
 - Never read, print or copy any `.env`; `.env.example` is the reference. Never configure
   production databases, hosting or secrets here — deploy is done by the lead.
+- Production is Render (`render.yaml`, Frankfurt) on Supabase Postgres, reached through
+  the session pooler as plain Postgres — Supabase's client libraries and keys are not
+  used. A pasted `postgresql://` string is switched to asyncpg in `config.py`.
+  `alembic/env.py` turns row-level security on for every table in `public` after each
+  upgrade: Supabase's Data API serves that schema to anyone with the public key, and
+  RLS with no policy shuts it out while the app, as the owner, is unaffected.
 - Never `git push`. Commit only your own paths (`git add <paths>`), imperative subject,
   a body that says why, ending with the `Co-Authored-By` line.
 - Comments say why, not what. No dead code, no TODO litter.
