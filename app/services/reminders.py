@@ -189,19 +189,24 @@ async def tidy(now: datetime) -> None:
     async with database.SessionLocal() as session:
         expired = now - DELETED_MEALS_KEEP
         await session.execute(delete(DeletedMeal).where(DeletedMeal.deleted_at < expired))
+        # One statement that checks and deletes: a demo kept a moment ago is
+        # no longer a demo by the time its row is reached, so a person who
+        # just claimed theirs never loses it to a list read a moment earlier
         demos = list(
             (
                 await session.execute(
-                    select(User.id).where(User.is_demo.is_(True), User.demo_expires_at < now)
+                    delete(User)
+                    .where(User.is_demo.is_(True), User.demo_expires_at < now)
+                    .returning(User.id)
                 )
             ).scalars()
         )
-        if demos:
-            for user_id in demos:
-                media.remove_previous(user_id)
-            await session.execute(delete(User).where(User.id.in_(demos)))
-            logger.info("Removed %s expired demo accounts", len(demos))
         await session.commit()
+    # The files go once the accounts are really gone
+    for user_id in demos:
+        media.remove_previous(user_id)
+    if demos:
+        logger.info("Removed %s expired demo accounts", len(demos))
 
 
 async def run(stop: asyncio.Event) -> None:
