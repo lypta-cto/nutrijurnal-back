@@ -7,7 +7,7 @@ the charts on the page all read the same slice.
 from datetime import date, timedelta
 
 from fastapi import APIRouter, HTTPException, Query, status
-from sqlalchemy import distinct, select
+from sqlalchemy import select
 
 from app.api.deps import CurrentUser, SessionDep
 from app.api.routes import body
@@ -59,9 +59,8 @@ async def read_progress(
     for entry in weights:
         days[entry.day].weight_kg = entry.kg
 
-    logged_days = set(
-        (await session.execute(select(distinct(Meal.day)).where(Meal.user_id == user.id))).scalars()
-    )
+    every_day = select(Meal.day).where(Meal.user_id == user.id).distinct()
+    logged_days = set((await session.execute(every_day)).scalars())
     viewer_today = today or date.today()
 
     eaten = [entry for entry in days.values() if entry.meals]
