@@ -22,9 +22,20 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 # stop the button being used to fill the database, without a store of its own
 _started: dict[str, deque[float]] = defaultdict(deque)
 
+# Past this many addresses the ones quiet for an hour are forgotten, so a
+# public button seen by many networks can't grow the worker's memory for ever
+SWEEP_AT = 10_000
+
+
+def _sweep(now: float) -> None:
+    for address in [key for key, times in _started.items() if not times or now - times[-1] > 3600]:
+        del _started[address]
+
 
 def _allow(address: str) -> bool:
     now = clock.monotonic()
+    if len(_started) >= SWEEP_AT:
+        _sweep(now)
     recent = _started[address]
     while recent and now - recent[0] > 3600:
         recent.popleft()

@@ -130,6 +130,20 @@ async def test_the_limit_on_demos_lifts_after_an_hour(client: AsyncClient, monke
     assert (await client.post(f"{PREFIX}/auth/demo", json={})).status_code == 201
 
 
+async def test_addresses_quiet_for_an_hour_are_forgotten(client: AsyncClient, monkeypatch):
+    clock = {"now": 1000.0}
+    monkeypatch.setattr(demo_routes.clock, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(demo_routes, "SWEEP_AT", 3)
+    demo_routes._started.clear()
+    for address in ("10.0.0.1", "10.0.0.2", "10.0.0.3"):
+        demo_routes._started[address].append(clock["now"])
+
+    clock["now"] += 3601
+    assert (await client.post(f"{PREFIX}/auth/demo", json={})).status_code == 201
+
+    assert set(demo_routes._started) == {"127.0.0.1"}
+
+
 async def test_a_refused_demo_does_not_count_against_the_hour(client: AsyncClient, monkeypatch):
     monkeypatch.setattr(settings, "DEMO_PER_HOUR", 1)
     clock = {"now": 1000.0}
