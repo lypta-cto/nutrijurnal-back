@@ -104,7 +104,11 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   them and tidies up (deleted meals, expired demos).
 - **demo** (`routes/demo.py`, `services/demo.py`) — `POST /auth/demo` builds a throwaway
   account with fourteen generic days; `is_demo`/`demo_expires_at` on the user; claim
-  keeps it. **account** (`routes/account.py`) — `GET /auth/me/export`.
+  keeps it. **account** (`routes/account.py`) — `GET /auth/me/export` (a JSON backup;
+  shared foods carry their `food_key`, since ids differ between databases) and
+  `POST /auth/me/import` (`services/importer.py`): that backup, or a diary CSV — this
+  app's or the CTO app's, same columns. Re-importing adds nothing twice; a file only
+  ever links shared foods and the importer's own.
 
 ## Hard rules
 

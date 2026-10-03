@@ -1,5 +1,6 @@
 """
-Everything a person has put into Nutrijurnal, handed back as one file.
+Everything a person has put into Nutrijurnal, handed back as one file — and
+taken in again: `POST /auth/me/import` reads that file, or a diary CSV.
 
 The diary already prints as a PDF or a CSV (`/eating/export`); this is the
 rest of it too, in a form another program can read: the account and its
@@ -15,8 +16,9 @@ import uuid
 from datetime import UTC, date, datetime, time
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import undefer
 
@@ -24,7 +26,7 @@ from app.api.deps import CurrentUser, SessionDep
 from app.models.body import WaterEntry, WeightEntry
 from app.models.eating import FavouriteFood, Food, Meal, Recipe
 from app.models.push import Reminder
-from app.services import goals, reminders
+from app.services import goals, importer, reminders
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -67,6 +69,25 @@ async def export_everything(
     )
     wanted = await rows(select(Reminder).where(Reminder.user_id == user.id))
 
+    # A shared food's id is this database's own; its key is the same in every
+    # Nutrijurnal, so a backup restored elsewhere still finds the food
+    named = {item.food_id for meal in meals for item in meal.items if item.food_id} | {
+        item.food_id for recipe in recipes for item in recipe.items if item.food_id
+    }
+    keys = (
+        dict(
+            (
+                await session.execute(
+                    select(Food.id, Food.key).where(
+                        Food.id.in_(named), Food.user_id.is_(None), Food.key.is_not(None)
+                    )
+                )
+            ).all()
+        )
+        if named
+        else {}
+    )
+
     def meal_of(meal: Meal) -> dict:
         body = _row(meal, ("id", "day", "at", "slot", "title", "recipe_title", "servings", "note"))
         body["items"] = [
@@ -84,7 +105,7 @@ async def export_everything(
                     "fat100",
                 ),
             )
-            | {"macros": item.macros}
+            | {"macros": item.macros, "food_key": keys.get(item.food_id)}
             for item in meal.items
         ]
         if meal.voice_type:
@@ -161,6 +182,7 @@ async def export_everything(
             | {
                 "items": [
                     _row(item, ("food_id", "label", "quantity", "unit", "grams", "optional"))
+                    | {"food_key": keys.get(item.food_id)}
                     for item in recipe.items
                 ]
             }
@@ -180,3 +202,40 @@ async def export_everything(
         media_type="application/json; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{name}"'},
     )
+
+
+# --- Import --------------------------------------------------------------------
+
+MAX_IMPORT_BYTES = 10 * 1024 * 1024
+
+
+class ImportOut(BaseModel):
+    foods: int
+    recipes: int
+    meals: int
+    water: int
+    weight: int
+    skipped: int
+    warnings: list[str]
+
+
+@router.post("/me/import", response_model=ImportOut)
+async def import_into_my_diary(
+    session: SessionDep, user: CurrentUser, file: UploadFile = File(...)
+) -> ImportOut:
+    """A Nutrijurnal backup (the JSON above) or a diary CSV — this app's export
+    or the CTO Productivity App's, which writes the same columns. Whatever is
+    already here is left alone, so the same file can be imported twice."""
+    content = await file.read(MAX_IMPORT_BYTES + 1)
+    if len(content) > MAX_IMPORT_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail="That file is larger than 10 MB.",
+        )
+    try:
+        result = await importer.import_file(session, user, content)
+    except importer.NotAnImport as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(error)
+        ) from error
+    return ImportOut(**result.__dict__)
