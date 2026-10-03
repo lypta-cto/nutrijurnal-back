@@ -144,8 +144,13 @@ the same session shape as login. Google sign-in is wired but off until
 anyone and links to an existing password account only when Google says the address is
 verified.
 
+Signing in, signing up and starting a demo are throttled in memory, per worker
+(`app/core/rate_limit.py`): sign-in per address and, for wrong passwords, per email;
+sign-up and demos per address an hour. Past a limit the answer is a 429 with
+`Retry-After`. Set `TRUSTED_PROXY=true` only behind a reverse proxy that appends the
+client's address to `X-Forwarded-For`.
+
 ## Not built yet
 
-Email verification, password reset, rate limiting on login and registration (the demo has
-its own per-address limit, in memory per worker). All are worth adding before real
-traffic.
+Email verification and password reset. Both are worth adding before real traffic, as is
+a shared store for the throttle once more than one machine serves the API.

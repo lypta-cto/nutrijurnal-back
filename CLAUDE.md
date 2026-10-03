@@ -43,6 +43,15 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   `/api/v1/auth`, SHA-256 hash in `refresh_tokens`). `GET /auth/providers` tells the
   login screen whether Google is on (only when `GOOGLE_CLIENT_ID`/`SECRET` are set).
   `DELETE /auth/me` closes an account; every user table cascades.
+- **throttling** (`core/rate_limit.py`) — an in-process, per-worker limiter on the
+  doors open without an account: sign-in per address (`LOGIN_PER_ADDRESS`, every try)
+  and per email (`LOGIN_FAILURES_PER_EMAIL`, wrong passwords only), both over 15
+  minutes; sign-up (`REGISTER_PER_HOUR`) and demos (`DEMO_PER_HOUR`) per address an
+  hour. Past a limit: 429 with an English `detail` and `Retry-After`. The address is
+  the connection's peer; `X-Forwarded-For` (its last entry) only with
+  `TRUSTED_PROXY=true`, set only when every request comes through a proxy that
+  appends it. Use `client_address(request)` wherever an address is recorded; tests
+  start from `rate_limit.reset()` (autouse in conftest).
 - **users** — admin-only CRUD kept from the template as operator tooling. Roles
   `viewer < member < admin < owner`; everyone who signs up is a member.
 - **eating** (`/eating/*`) — the whole product:

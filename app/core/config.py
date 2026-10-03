@@ -65,6 +65,19 @@ class Settings(BaseSettings):
             return r"http://(localhost|127\.0\.0\.1):\d+"
         return None
 
+    # --- Throttling ----------------------------------------------------------
+    # Signing in and signing up are open to anyone, so each is limited per
+    # address (app/core/rate_limit.py), and sign-in also per email, counting
+    # only the wrong passwords; past a limit the answer is 429. Windows: 15
+    # minutes for signing in, an hour for new accounts (and demos, below).
+    LOGIN_PER_ADDRESS: int = 30
+    LOGIN_FAILURES_PER_EMAIL: int = 10
+    REGISTER_PER_HOUR: int = 10
+    # True only when the API is reached solely through a reverse proxy that
+    # appends the client's address to X-Forwarded-For: the last entry is then
+    # who is asking. Left false the header is ignored — anyone can write it.
+    TRUSTED_PROXY: bool = False
+
     # --- Google OAuth --------------------------------------------------------
     # Create at https://console.cloud.google.com/apis/credentials
     # Authorised redirect URI: {BACKEND_URL}/api/v1/auth/google/callback

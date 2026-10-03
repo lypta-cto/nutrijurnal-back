@@ -8,7 +8,6 @@ from httpx import AsyncClient
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.routes import demo as demo_routes
 from app.core.config import settings
 from app.models import Meal, User
 from app.services import eating_seed, reminders
@@ -21,11 +20,9 @@ TODAY = datetime.now(UTC).date()
 
 @pytest.fixture(autouse=True)
 async def shipped(session: AsyncSession) -> None:
-    """The real pantry — the demo's plates are built from it — and a fresh
-    start for the per-address limit."""
+    """The real pantry — the demo's plates are built from it."""
     await eating_seed.seed_foods(session)
     await session.commit()
-    demo_routes._started.clear()
 
 
 async def _demo(client: AsyncClient) -> tuple[dict, dict]:

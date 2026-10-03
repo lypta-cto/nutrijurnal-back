@@ -17,6 +17,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
+from app.core.rate_limit import client_address
 from app.services import auth as auth_service
 
 router = APIRouter(prefix="/auth/google", tags=["auth"])
@@ -102,7 +103,7 @@ async def google_callback(request: Request):
             session,
             user,
             user_agent=request.headers.get("user-agent"),
-            ip_address=request.client.host if request.client else None,
+            ip_address=client_address(request),
         )
         await session.commit()
 

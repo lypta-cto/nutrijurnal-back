@@ -27,6 +27,12 @@ os.environ["VAPID_PRIVATE_KEY"] = ""
 os.environ["DEMO_ENABLED"] = "true"
 os.environ["DEMO_TTL_DAYS"] = "3"
 os.environ["DEMO_PER_HOUR"] = "10"
+# The sign-in and sign-up throttles keep their shipped limits too, and the
+# test transport's address is the client's own: no proxy is trusted
+os.environ["LOGIN_PER_ADDRESS"] = "30"
+os.environ["LOGIN_FAILURES_PER_EMAIL"] = "10"
+os.environ["REGISTER_PER_HOUR"] = "10"
+os.environ["TRUSTED_PROXY"] = "false"
 
 import httpx  # noqa: E402
 from httpx import ASGITransport, AsyncClient  # noqa: E402
@@ -37,7 +43,7 @@ from sqlalchemy.ext.asyncio import (  # noqa: E402
     create_async_engine,
 )
 
-from app.core import database  # noqa: E402
+from app.core import database, rate_limit  # noqa: E402
 from app.core.config import settings  # noqa: E402
 from app.main import app  # noqa: E402
 from app.models import Base  # noqa: E402
@@ -103,6 +109,13 @@ async def client(session_maker) -> AsyncGenerator[AsyncClient, None]:
         base_url="http://test",
     ) as client:
         yield client
+
+
+@pytest.fixture(autouse=True)
+def fresh_throttles():
+    """Every request of the suite comes from one address; each test starts
+    with none of the earlier ones counted against it."""
+    rate_limit.reset()
 
 
 @pytest.fixture(autouse=True)

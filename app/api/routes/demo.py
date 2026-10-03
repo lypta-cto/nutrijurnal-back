@@ -3,13 +3,11 @@
 two weeks in it — and, if the person likes it, keeping it as their own.
 """
 
-import time as clock
-from collections import defaultdict, deque
-
 from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
+from app.core.rate_limit import Limiter, client_address, too_many
 from app.core.security import hash_password
 from app.schemas.auth import AuthResponse, DemoClaim, DemoRequest
 from app.schemas.user import UserRead
@@ -18,31 +16,9 @@ from app.services import demo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-# When each address last started a demo — in memory, per worker: enough to
-# stop the button being used to fill the database, without a store of its own
-_started: dict[str, deque[float]] = defaultdict(deque)
-
-# Past this many addresses the ones quiet for an hour are forgotten, so a
-# public button seen by many networks can't grow the worker's memory for ever
-SWEEP_AT = 10_000
-
-
-def _sweep(now: float) -> None:
-    for address in [key for key, times in _started.items() if not times or now - times[-1] > 3600]:
-        del _started[address]
-
-
-def _allow(address: str) -> bool:
-    now = clock.monotonic()
-    if len(_started) >= SWEEP_AT:
-        _sweep(now)
-    recent = _started[address]
-    while recent and now - recent[0] > 3600:
-        recent.popleft()
-    if len(recent) >= settings.DEMO_PER_HOUR:
-        return False
-    recent.append(now)
-    return True
+# Demos started per address in the last hour, so the button cannot be used
+# to fill the database
+demos = Limiter(window=60 * 60, limit=lambda: settings.DEMO_PER_HOUR)
 
 
 @router.post("/demo", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
@@ -53,11 +29,10 @@ async def start_demo(
     and weight in it. It is deleted after DEMO_TTL_DAYS unless it is kept."""
     if not settings.DEMO_ENABLED:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No demo here")
-    address = request.client.host if request.client else "unknown"
-    if not _allow(address):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many demos from here — try again in an hour, or create an account",
+    address = client_address(request)
+    if not demos.take(address):
+        raise too_many(
+            demos, address, "Too many demos from here — try again in an hour, or create an account"
         )
 
     user = await demo.create_demo(session, payload.today)

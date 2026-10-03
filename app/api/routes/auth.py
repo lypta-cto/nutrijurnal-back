@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.config import settings
+from app.core.rate_limit import Limiter, client_address, too_many
 from app.core.security import hash_password, verify_password
 from app.schemas.auth import (
     AuthResponse,
@@ -23,7 +24,14 @@ RefreshCookie = Annotated[str | None, Cookie(alias=settings.REFRESH_COOKIE_NAME)
 
 
 def _client_meta(request: Request) -> tuple[str | None, str | None]:
-    return request.headers.get("user-agent"), (request.client.host if request.client else None)
+    return request.headers.get("user-agent"), client_address(request)
+
+
+# Every attempt from one address counts; for one account only the wrong
+# passwords do, so its owner signing in on a new phone is never in the way
+sign_ins = Limiter(window=15 * 60, limit=lambda: settings.LOGIN_PER_ADDRESS)
+wrong_passwords = Limiter(window=15 * 60, limit=lambda: settings.LOGIN_FAILURES_PER_EMAIL)
+sign_ups = Limiter(window=60 * 60, limit=lambda: settings.REGISTER_PER_HOUR)
 
 
 @router.get("/providers", response_model=ProvidersRead)
@@ -39,6 +47,9 @@ async def register(
     response: Response,
     session: SessionDep,
 ) -> AuthResponse:
+    address = client_address(request)
+    if not sign_ups.take(address):
+        raise too_many(sign_ups, address, "Too many new accounts from here — try again in an hour")
     if await auth_service.get_user_by_email(session, payload.email):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -73,9 +84,23 @@ async def login(
     response: Response,
     session: SessionDep,
 ) -> AuthResponse:
+    address, email = client_address(request), payload.email.lower()
+    if not sign_ins.take(address):
+        raise too_many(
+            sign_ins, address, "Too many sign-in attempts from here — try again in a few minutes"
+        )
+    # Refused before the password is checked, so guessing on gets no answer at all
+    if not wrong_passwords.allows(email):
+        raise too_many(
+            wrong_passwords,
+            email,
+            "Too many wrong passwords for this email — try again in a few minutes",
+        )
+
     user = await auth_service.authenticate(session, payload.email, payload.password)
 
     if user is None:
+        wrong_passwords.hit(email)
         # Deliberately vague: don't reveal whether the email exists
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

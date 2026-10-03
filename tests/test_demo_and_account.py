@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import ORMExecuteState, Session
 
 from app.api.routes import demo as demo_routes
+from app.core import rate_limit
 from app.core.config import settings
 from app.models import User
 from app.services import eating_seed, reminders
@@ -26,11 +27,10 @@ KEEP = {"email": "kept@example.com", "password": "keep-it-123", "full_name": "An
 
 @pytest.fixture(autouse=True)
 async def shipped(session: AsyncSession) -> None:
-    """The demo builds its plates from the real pantry, and every test starts
-    with the per-address limit untouched."""
+    """The demo builds its plates from the real pantry (and conftest starts
+    every test with the per-address limit untouched)."""
     await eating_seed.seed_foods(session)
     await session.commit()
-    demo_routes._started.clear()
 
 
 async def demo(client: AsyncClient, today: date = TODAY) -> dict:
@@ -124,7 +124,7 @@ async def test_a_demo_can_be_closed_at_once(client: AsyncClient):
 async def test_the_limit_on_demos_lifts_after_an_hour(client: AsyncClient, monkeypatch):
     monkeypatch.setattr(settings, "DEMO_PER_HOUR", 1)
     clock = {"now": 1000.0}
-    monkeypatch.setattr(demo_routes.clock, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(rate_limit.clock, "monotonic", lambda: clock["now"])
 
     await demo(client)
     clock["now"] += 3599
@@ -136,22 +136,21 @@ async def test_the_limit_on_demos_lifts_after_an_hour(client: AsyncClient, monke
 
 async def test_addresses_quiet_for_an_hour_are_forgotten(client: AsyncClient, monkeypatch):
     clock = {"now": 1000.0}
-    monkeypatch.setattr(demo_routes.clock, "monotonic", lambda: clock["now"])
-    monkeypatch.setattr(demo_routes, "SWEEP_AT", 3)
-    demo_routes._started.clear()
+    monkeypatch.setattr(rate_limit.clock, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(rate_limit, "SWEEP_AT", 3)
     for address in ("10.0.0.1", "10.0.0.2", "10.0.0.3"):
-        demo_routes._started[address].append(clock["now"])
+        demo_routes.demos.hits[address].append(clock["now"])
 
     clock["now"] += 3601
     assert (await client.post(f"{PREFIX}/auth/demo", json={})).status_code == 201
 
-    assert set(demo_routes._started) == {"127.0.0.1"}
+    assert set(demo_routes.demos.hits) == {"127.0.0.1"}
 
 
 async def test_a_refused_demo_does_not_count_against_the_hour(client: AsyncClient, monkeypatch):
     monkeypatch.setattr(settings, "DEMO_PER_HOUR", 1)
     clock = {"now": 1000.0}
-    monkeypatch.setattr(demo_routes.clock, "monotonic", lambda: clock["now"])
+    monkeypatch.setattr(rate_limit.clock, "monotonic", lambda: clock["now"])
 
     await demo(client)
     for _ in range(5):
