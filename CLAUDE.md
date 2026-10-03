@@ -23,6 +23,7 @@ docker compose up -d db
 .venv/bin/python -m app.cli seed       # shared foods (also loaded on every boot)
 .venv/bin/python -m app.cli owner      # operator account from FIRST_SUPERUSER_*
 .venv/bin/python -m app.cli secret     # SECRET_KEY for .env
+.venv/bin/python -m app.cli vapid      # VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY for reminders
 
 # The checks — green before any commit
 .venv/bin/python -m pytest -q && .venv/bin/ruff check . && .venv/bin/ruff format --check .
@@ -57,10 +58,29 @@ Migration files are kept as Alembic wrote them (ruff skips `alembic/versions`).
   - Voice notes ride on `Meal.voice` (deferred column — only the play endpoint loads it).
   - Targets live on the user (`target_kcal/protein/carbs/fat`) with `onboarded_at`
     marking the first-run questions as done; `GET/PATCH /eating/settings` serves them.
-  - `services/nutrition.py` reads written amounts ("1 merica whey", "malo putera") into
-    grams on five-letter Serbian stems; `food_lookup.py` reads a barcode (zxing-cpp) and
-    asks Open Food Facts; `eating_report.py` prints the PDF/CSV export;
-    `eating_seed.py` loads the shared foods, keyed so it is idempotent.
+  - `services/nutrition.py` reads written amounts ("1 merica whey", "malo putera",
+    "two eggs") into grams on five-letter Serbian stems; `slots.py` places a meal in
+    breakfast/lunch/dinner/snack and reads the slot out of a sentence ("za ručak");
+    `food_lookup.py` reads a barcode (zxing-cpp) and asks Open Food Facts;
+    `eating_report.py` prints the PDF/CSV export; `eating_seed.py` loads the shared foods,
+    keyed so it is idempotent.
+  - Meals carry a `slot`; `favourite_foods` stars; `GET /eating/foods/quick` gives the
+    starred and recent foods with their last amounts; copies of a meal or a day keep the
+    eaten numbers. A deleted meal is kept whole in `deleted_meals` for a day so
+    `/restore` can undo it.
+  - `services/goals.py` — the calculator behind `POST /eating/goals/estimate`; the
+    answers live on the user (`sex`, `birth_year`, `height_cm`, `weight_kg`, `activity`,
+    `goal`, `goal_pace`, `protein_per_kg`, `fat_percent`).
+- **body** (`routes/body.py`, `models/body.py`) — `water_entries` (one per glass) and
+  `weight_entries` (one per day); `routes/progress.py` answers a period in one request
+  with the streak (`services/progress.py`).
+- **reminders** (`routes/push.py`, `models/push.py`, `services/push.py`,
+  `services/reminders.py`) — push subscriptions (only known push hosts), reminders in the
+  user's `timezone`, and the in-process loop started in `main.py`'s lifespan that sends
+  them and tidies up (deleted meals, expired demos).
+- **demo** (`routes/demo.py`, `services/demo.py`) — `POST /auth/demo` builds a throwaway
+  account with fourteen generic days; `is_demo`/`demo_expires_at` on the user; claim
+  keeps it. **account** (`routes/account.py`) — `GET /auth/me/export`.
 
 ## Hard rules
 
